@@ -1,7 +1,9 @@
+from datetime import datetime
 import os
 from pathlib import Path
 from typing import Tuple
 from PIL import Image, ImageColor, ImageFont, ImageDraw
+import pytz
 
 # More fonts https://www.dafont.com/bitmap.php
 # https://lucid.app/lucidchart/6a918925-6ff7-4aff-91ce-f57223f1599a/edit?beaconFlowId=B86FF4B9E5FF811D&invitationId=inv_afc6c6ae-b5ad-4c89-bf62-57c523d488b7&page=0_0#
@@ -36,19 +38,26 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict) -> Tuple[
     # make a blank image for the text, initialized to transparent text color
     # txt_img = Image.new("L", base.size, BLACK_8)
     # get a font
-    fnt = ImageFont.truetype(get_font_path(), 20)
+    fnt_40 = ImageFont.truetype(get_font_path(), 40)
+    fnt_30 = ImageFont.truetype(get_font_path(), 30)
+    fnt_20 = ImageFont.truetype(get_font_path(), 20)
     # get a drawing context
     draw_blk = ImageDraw.Draw(base_blk)
     draw_red = ImageDraw.Draw(base_red)
     # draw text, half opacity
 
-    def write_text(coords: Tuple[int, int], text: str, red=False):
+    def write_text(coords: Tuple[int, int], fnt: ImageFont.FreeTypeFont, text: str, red=False):
         d = draw_red if red else draw_blk
         d.text(coords, text, font=fnt, fill=BLACK_BIT)
 
-    write_text((10, 10), "Now")
-    write_text((10, 60), "Today")
-    write_text((10, 120), "7 Day", red=True)
+    now_hst = pytz.timezone("HST").fromutc(
+        datetime.utcnow())
+
+    write_text((10, 10), fnt_40, "Now")
+    write_text((10, 60), fnt_20, now_hst.strftime("%H:%M %Z"))
+    write_text((10, 160), fnt_40, "Today")
+    write_text((10, 200), fnt_20, now_hst.strftime("%b %d"))
+    write_text((10, 340), fnt_40, "7 Day", red=True)
 
     return (base_blk, base_red)
 

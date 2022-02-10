@@ -1,0 +1,2 @@
+# curl https://api.weatherflow.com/wxengine/rest/graph/getGraph\?units_wind\=mph\&units_temp\=f\&units_distance\=mi\&fields\=wind\&format\=json\&null_ob_min_from_now\=60\&show_virtual_obs\=true\&spot_id\=187573\&time_start_offset_hours\=-36\&time_end_offset_hours\=0\&type\=dataonly\&model_ids\=-101\&wf_token\=e5615b765be6c96e23cc17cba3373778\&_\=1644300565602
+# The above generated test_resp_spot_...json

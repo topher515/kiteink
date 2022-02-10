@@ -1,22 +1,23 @@
 {
+  "gauge_img": "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",
   "graph_summary": {
     "air_temp_data": null,
-    "current_time_epoch_utc": 1644521152643,
-    "current_time_local": "2022-02-10 09:25:52",
+    "current_time_epoch_utc": 1644528935959,
+    "current_time_local": "2022-02-10 11:35:35",
     "graph_data_exists": true,
     "is_data_high_resolution": false,
     "is_data_restricted": false,
     "is_data_super_high_resolution": false,
     "is_data_thinned": false,
-    "last_ob_avg": 0.0,
-    "last_ob_dir": 292,
-    "last_ob_dir_txt": "WNW",
-    "last_ob_gust": null,
+    "last_ob_avg": 2.606928726,
+    "last_ob_dir": 39,
+    "last_ob_dir_txt": "NE",
+    "last_ob_gust": 4.8662669551999995,
     "last_ob_lull": null,
     "last_ob_pres": null,
-    "last_ob_temp": 73.8,
-    "last_ob_time_local": "2022-02-10 09:15:02.0",
-    "last_ob_wind_desc": "0 kts WNW",
+    "last_ob_temp": 83.7,
+    "last_ob_time_local": "2022-02-10 11:35:01.0",
+    "last_ob_wind_desc": "3 (g5) kts NE",
     "local_timezone": "Pacific/Honolulu",
     "model_data": null,
     "name": "Lanikai Beach",
@@ -38,106 +39,6 @@
     "wave_height_data": null,
     "website_id": 2,
     "wind_avg_data": [
-      [
-        1644388390000.0,
-        8.950455292600001
-      ],
-      [
-        1644388750000.0,
-        9.6456362862
-      ],
-      [
-        1644389104000.0,
-        9.6456362862
-      ],
-      [
-        1644389343000.0,
-        9.732533910399999
-      ],
-      [
-        1644389699000.0,
-        9.3849434136
-      ],
-      [
-        1644389824000.0,
-        9.2980457894
-      ],
-      [
-        1644390179000.0,
-        9.4718410378
-      ],
-      [
-        1644390546000.0,
-        9.4718410378
-      ],
-      [
-        1644390899000.0,
-        8.7766600442
-      ],
-      [
-        1644391020000.0,
-        8.950455292600001
-      ],
-      [
-        1644391501000.0,
-        9.0373529168
-      ],
-      [
-        1644391743000.0,
-        9.6456362862
-      ],
-      [
-        1644392099000.0,
-        8.689762420000001
-      ],
-      [
-        1644392338000.0,
-        7.9076838022
-      ],
-      [
-        1644392578000.0,
-        7.1256051843999995
-      ],
-      [
-        1644392939000.0,
-        7.4731956812
-      ],
-      [
-        1644393300000.0,
-        8.0814790506
-      ],
-      [
-        1644393544000.0,
-        8.950455292600001
-      ],
-      [
-        1644393903000.0,
-        8.950455292600001
-      ],
-      [
-        1644394144000.0,
-        9.2111481652
-      ],
-      [
-        1644394378000.0,
-        8.7766600442
-      ],
-      [
-        1644394741000.0,
-        9.732533910399999
-      ],
-      [
-        1644394983000.0,
-        9.993226783
-      ],
-      [
-        1644395343000.0,
-        10.3408172798
-      ],
-      [
-        1644395703000.0,
-        9.0373529168
-      ],
       [
         1644395943000.0,
         8.0814790506
@@ -1675,111 +1576,91 @@
         0.0
       ],
       [
-        1644524752643.0,
+        1644521708000.0,
+        2.1724406050000002
+      ],
+      [
+        1644522070000.0,
+        1.6510548597999999
+      ],
+      [
+        1644523143000.0,
+        2.1724406050000002
+      ],
+      [
+        1644523622000.0,
+        2.1724406050000002
+      ],
+      [
+        1644523990000.0,
+        1.9117477324
+      ],
+      [
+        1644524342000.0,
+        1.9117477324
+      ],
+      [
+        1644524702000.0,
+        1.8248501082000002
+      ],
+      [
+        1644524942000.0,
+        2.0855429808
+      ],
+      [
+        1644525182000.0,
+        2.0855429808
+      ],
+      [
+        1644525542000.0,
+        2.1724406050000002
+      ],
+      [
+        1644525782000.0,
+        1.8248501082000002
+      ],
+      [
+        1644526032000.0,
+        1.8248501082000002
+      ],
+      [
+        1644526745000.0,
+        1.9117477324
+      ],
+      [
+        1644526981000.0,
+        2.3462358534
+      ],
+      [
+        1644527342000.0,
+        2.3462358534
+      ],
+      [
+        1644527581000.0,
+        2.5200311018
+      ],
+      [
+        1644527946000.0,
+        2.1724406050000002
+      ],
+      [
+        1644528301000.0,
+        2.1724406050000002
+      ],
+      [
+        1644528541000.0,
+        2.1724406050000002
+      ],
+      [
+        1644528901000.0,
+        2.606928726
+      ],
+      [
+        1644532535959.0,
         null
       ]
     ],
     "wind_dir_data": [
-      [
-        1644388390000.0,
-        59.0
-      ],
-      [
-        1644388750000.0,
-        63.0
-      ],
-      [
-        1644389104000.0,
-        64.0
-      ],
-      [
-        1644389343000.0,
-        61.0
-      ],
-      [
-        1644389699000.0,
-        58.0
-      ],
-      [
-        1644389824000.0,
-        57.0
-      ],
-      [
-        1644390179000.0,
-        57.0
-      ],
-      [
-        1644390546000.0,
-        58.0
-      ],
-      [
-        1644390899000.0,
-        59.0
-      ],
-      [
-        1644391020000.0,
-        58.0
-      ],
-      [
-        1644391501000.0,
-        62.0
-      ],
-      [
-        1644391743000.0,
-        66.0
-      ],
-      [
-        1644392099000.0,
-        69.0
-      ],
-      [
-        1644392338000.0,
-        69.0
-      ],
-      [
-        1644392578000.0,
-        69.0
-      ],
-      [
-        1644392939000.0,
-        70.0
-      ],
-      [
-        1644393300000.0,
-        72.0
-      ],
-      [
-        1644393544000.0,
-        70.0
-      ],
-      [
-        1644393903000.0,
-        70.0
-      ],
-      [
-        1644394144000.0,
-        71.0
-      ],
-      [
-        1644394378000.0,
-        73.0
-      ],
-      [
-        1644394741000.0,
-        73.0
-      ],
-      [
-        1644394983000.0,
-        72.0
-      ],
-      [
-        1644395343000.0,
-        70.0
-      ],
-      [
-        1644395703000.0,
-        71.0
-      ],
       [
         1644395943000.0,
         71.0
@@ -3317,111 +3198,91 @@
         292.0
       ],
       [
-        1644524752643.0,
+        1644521708000.0,
+        299.0
+      ],
+      [
+        1644522070000.0,
+        313.0
+      ],
+      [
+        1644523143000.0,
+        355.0
+      ],
+      [
+        1644523622000.0,
+        358.0
+      ],
+      [
+        1644523990000.0,
+        3.0
+      ],
+      [
+        1644524342000.0,
+        5.0
+      ],
+      [
+        1644524702000.0,
+        6.0
+      ],
+      [
+        1644524942000.0,
+        7.0
+      ],
+      [
+        1644525182000.0,
+        7.0
+      ],
+      [
+        1644525542000.0,
+        8.0
+      ],
+      [
+        1644525782000.0,
+        8.0
+      ],
+      [
+        1644526032000.0,
+        8.0
+      ],
+      [
+        1644526745000.0,
+        11.0
+      ],
+      [
+        1644526981000.0,
+        14.0
+      ],
+      [
+        1644527342000.0,
+        17.0
+      ],
+      [
+        1644527581000.0,
+        18.0
+      ],
+      [
+        1644527946000.0,
+        21.0
+      ],
+      [
+        1644528301000.0,
+        27.0
+      ],
+      [
+        1644528541000.0,
+        34.0
+      ],
+      [
+        1644528901000.0,
+        39.0
+      ],
+      [
+        1644532535959.0,
         null
       ]
     ],
     "wind_gust_data": [
-      [
-        1644388390000.0,
-        12.426360260600001
-      ],
-      [
-        1644388750000.0,
-        13.469131751
-      ],
-      [
-        1644389104000.0,
-        14.0774151204
-      ],
-      [
-        1644389343000.0,
-        14.0774151204
-      ],
-      [
-        1644389699000.0,
-        14.0774151204
-      ],
-      [
-        1644389824000.0,
-        12.426360260600001
-      ],
-      [
-        1644390179000.0,
-        12.426360260600001
-      ],
-      [
-        1644390546000.0,
-        12.426360260600001
-      ],
-      [
-        1644390899000.0,
-        11.9049745154
-      ],
-      [
-        1644391020000.0,
-        12.426360260600001
-      ],
-      [
-        1644391501000.0,
-        13.469131751
-      ],
-      [
-        1644391743000.0,
-        13.469131751
-      ],
-      [
-        1644392099000.0,
-        13.469131751
-      ],
-      [
-        1644392338000.0,
-        11.9049745154
-      ],
-      [
-        1644392578000.0,
-        11.9049745154
-      ],
-      [
-        1644392939000.0,
-        11.9049745154
-      ],
-      [
-        1644393300000.0,
-        12.426360260600001
-      ],
-      [
-        1644393544000.0,
-        12.426360260600001
-      ],
-      [
-        1644393903000.0,
-        12.426360260600001
-      ],
-      [
-        1644394144000.0,
-        14.0774151204
-      ],
-      [
-        1644394378000.0,
-        14.0774151204
-      ],
-      [
-        1644394741000.0,
-        14.598800865600001
-      ],
-      [
-        1644394983000.0,
-        14.598800865600001
-      ],
-      [
-        1644395343000.0,
-        14.598800865600001
-      ],
-      [
-        1644395703000.0,
-        14.598800865600001
-      ],
       [
         1644395943000.0,
         13.469131751
@@ -4959,7 +4820,87 @@
         null
       ],
       [
-        1644524752643.0,
+        1644521708000.0,
+        3.7365978406
+      ],
+      [
+        1644522070000.0,
+        2.1724406050000002
+      ],
+      [
+        1644523143000.0,
+        3.7365978406
+      ],
+      [
+        1644523622000.0,
+        3.7365978406
+      ],
+      [
+        1644523990000.0,
+        3.7365978406
+      ],
+      [
+        1644524342000.0,
+        3.7365978406
+      ],
+      [
+        1644524702000.0,
+        3.7365978406
+      ],
+      [
+        1644524942000.0,
+        4.3448812100000005
+      ],
+      [
+        1644525182000.0,
+        4.3448812100000005
+      ],
+      [
+        1644525542000.0,
+        4.3448812100000005
+      ],
+      [
+        1644525782000.0,
+        3.7365978406
+      ],
+      [
+        1644526032000.0,
+        3.7365978406
+      ],
+      [
+        1644526745000.0,
+        3.7365978406
+      ],
+      [
+        1644526981000.0,
+        4.3448812100000005
+      ],
+      [
+        1644527342000.0,
+        4.3448812100000005
+      ],
+      [
+        1644527581000.0,
+        4.3448812100000005
+      ],
+      [
+        1644527946000.0,
+        4.3448812100000005
+      ],
+      [
+        1644528301000.0,
+        4.3448812100000005
+      ],
+      [
+        1644528541000.0,
+        4.8662669551999995
+      ],
+      [
+        1644528901000.0,
+        4.8662669551999995
+      ],
+      [
+        1644532535959.0,
         null
       ]
     ],
@@ -5367,7 +5308,7 @@
           "relative_humidity": 60.1,
           "temp": 74.0,
           "total_precip": 0.0,
-          "wave_direction": 84,
+          "wave_direction": 85,
           "wave_height": 2.6,
           "wave_period": 8.0,
           "wind_dir": 116,
@@ -5394,7 +5335,7 @@
           "relative_humidity": 61.0,
           "temp": 73.5,
           "total_precip": 0.0,
-          "wave_direction": 84,
+          "wave_direction": 85,
           "wave_height": 2.6,
           "wave_period": 8.0,
           "wind_dir": 105,
@@ -5452,7 +5393,7 @@
           "relative_humidity": 63.6,
           "temp": 72.5,
           "total_precip": 0.0,
-          "wave_direction": 84,
+          "wave_direction": 85,
           "wave_height": 2.5,
           "wave_period": 7.9,
           "wind_dir": 88,
@@ -5479,7 +5420,7 @@
           "relative_humidity": 65.2,
           "temp": 72.0,
           "total_precip": 0.0,
-          "wave_direction": 84,
+          "wave_direction": 85,
           "wave_height": 2.5,
           "wave_period": 7.9,
           "wind_dir": 82,
@@ -5877,7 +5818,7 @@
           "relative_humidity": 69.3,
           "temp": 71.7,
           "total_precip": 0.0,
-          "wave_direction": 75,
+          "wave_direction": 76,
           "wave_height": 2.5,
           "wave_period": 8.2,
           "wind_dir": 91,
@@ -5904,7 +5845,7 @@
           "relative_humidity": 65.0,
           "temp": 73.1,
           "total_precip": 0.0,
-          "wave_direction": 75,
+          "wave_direction": 76,
           "wave_height": 2.5,
           "wave_period": 8.2,
           "wind_dir": 94,
@@ -8172,7 +8113,7 @@
           "relative_humidity": 64.3,
           "temp": 71.6,
           "total_precip": 0.0,
-          "wave_direction": 34,
+          "wave_direction": 35,
           "wave_height": 4.9,
           "wave_period": 8.3,
           "wind_dir": 63,
@@ -8199,7 +8140,7 @@
           "relative_humidity": 65.1,
           "temp": 71.0,
           "total_precip": 0.0,
-          "wave_direction": 34,
+          "wave_direction": 35,
           "wave_height": 4.9,
           "wave_period": 8.3,
           "wind_dir": 66,

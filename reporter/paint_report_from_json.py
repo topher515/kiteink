@@ -22,7 +22,8 @@ def main():
     args = parser.parse_args()
     data = json.load(args.infile)
 
-    img = paint_display_image(data["graph_summary"], data["models"]["-1"])
+    img = paint_display_image(
+        data["graph_summary"], data["models"]["-1"], data["gauge_img"])
 
     def make_default_filename():
         spot_name = data["graph_summary"]["name"]

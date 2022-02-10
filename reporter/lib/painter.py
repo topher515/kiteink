@@ -1,7 +1,10 @@
+from base64 import b64decode
 from datetime import datetime
+from io import BytesIO
 import os
 from pathlib import Path
-from typing import Tuple
+import textwrap
+from typing import Tuple, Union
 from PIL import Image, ImageColor, ImageFont, ImageDraw
 import pytz
 
@@ -28,43 +31,69 @@ def composite_red_blk(blk_img: Image.Image, red_img: Image.Image) -> Image.Image
     return out
 
 
-def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict) -> Tuple[Image.Image, Image.Image]:
+def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img_data: Union[str, bytes]) -> Tuple[Image.Image, Image.Image]:
     '''
     Returns black
     '''
     base_blk = Image.new("1", DIMENSIONS, WHITE_BIT)
     base_red = Image.new("1", DIMENSIONS, WHITE_BIT)
 
-    # make a blank image for the text, initialized to transparent text color
-    # txt_img = Image.new("L", base.size, BLACK_8)
-    # get a font
+    # Get drawing contexts
+    draw_blk = ImageDraw.Draw(base_blk)
+    draw_red = ImageDraw.Draw(base_red)
+
     fnt_40 = ImageFont.truetype(get_font_path(), 40)
     fnt_30 = ImageFont.truetype(get_font_path(), 30)
     fnt_20 = ImageFont.truetype(get_font_path(), 20)
-    # get a drawing context
-    draw_blk = ImageDraw.Draw(base_blk)
-    draw_red = ImageDraw.Draw(base_red)
-    # draw text, half opacity
+    fnt_12 = ImageFont.truetype(get_font_path(), 10)
 
     def write_text(coords: Tuple[int, int], fnt: ImageFont.FreeTypeFont, text: str, red=False):
         d = draw_red if red else draw_blk
-        d.text(coords, text, font=fnt, fill=BLACK_BIT)
+        d.text(coords, text, font=fnt, fill=BLACK_BIT, )
 
-    now_hst = pytz.timezone("HST").fromutc(
-        datetime.utcnow())
+    def paint_col1(x_start: int):
 
-    write_text((10, 10), fnt_40, "Now")
-    write_text((10, 60), fnt_20, now_hst.strftime("%H:%M %Z"))
-    write_text((10, 160), fnt_40, "Today")
-    write_text((10, 200), fnt_20, now_hst.strftime("%b %d"))
-    write_text((10, 340), fnt_40, "7 Day", red=True)
+        now_hst = pytz.timezone("HST").fromutc(
+            datetime.utcnow())
+
+        write_text((x_start, 70), fnt_40, "Now")
+        write_text((x_start, 110), fnt_20, now_hst.strftime("%H:%M %Z"))
+        write_text((x_start, 190), fnt_40, "Today")
+        write_text((x_start, 230), fnt_20, now_hst.strftime("%b %d"))
+        write_text((x_start, 350), fnt_40, "7 Day", red=True)
+
+    def paint_col2(x_start: int):
+
+        # Write Spot title
+        spot_name = graph_summary_data["name"][:8]
+        # offset = 10
+        # for line in textwrap.wrap(spot_name, width=10):
+        #     write_text((x_start, offset), fnt_30, line)
+        #     offset += fnt_30.getsize(line)[1]
+        write_text((x_start, 10), fnt_30, spot_name)
+
+        # Write Last updated
+        last_fetch = datetime.fromtimestamp(
+            graph_summary_data["current_time_epoch_utc"]/1000)  # .astimezone(pytz.UTC)
+        last_fetch_local = pytz.timezone("HST").fromutc(last_fetch)
+        write_text((x_start, 40), fnt_12,
+                   last_fetch_local.strftime("Update: %b %d, %H:%M %Z"))
+
+        # Write Gauge
+        gauge_img = Image.open(BytesIO(b64decode(gauge_img_data))).convert("1")
+        base_blk.paste(gauge_img.crop((20, 20, 160, 160)
+                                      ).resize((100, 100)), (x_start, 70))
+
+    paint_col1(10)
+    paint_col2(200)
 
     return (base_blk, base_red)
 
 
-def paint_display_image(graph_summary_data: dict, model_data: dict) -> Image.Image:
+def paint_display_image(graph_summary_data: dict, model_data: dict, gauge_img: bytes) -> Image.Image:
     blk_img, red_img = paint_blk_and_red_imgs(
         graph_summary_data,
-        model_data
+        model_data,
+        gauge_img
     )
     return composite_red_blk(blk_img, red_img)

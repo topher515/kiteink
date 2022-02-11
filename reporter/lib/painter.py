@@ -2,7 +2,6 @@ import os
 import statistics
 import textwrap
 from base64 import b64decode
-from collections import defaultdict
 from datetime import datetime, timedelta, tzinfo
 from email.headerregistry import Group
 from io import BytesIO
@@ -13,7 +12,7 @@ from typing import Callable, Dict, Sequence, Tuple, Union
 
 import dateutil.parser
 import pytz
-from PIL import Image, ImageColor, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 # More fonts https://www.dafont.com/bitmap.php
 # https://lucid.app/lucidchart/6a918925-6ff7-4aff-91ce-f57223f1599a/edit?beaconFlowId=B86FF4B9E5FF811D&invitationId=inv_afc6c6ae-b5ad-4c89-bf62-57c523d488b7&page=0_0#
@@ -31,7 +30,8 @@ CONSIDERED_OLD = timedelta(hours=1)
 
 
 def get_font_path():
-    return os.path.join(Path(__file__).resolve().parent, "vcr_osd_mono_1.ttf")
+    # "vcr_osd_mono_1.ttf")
+    return os.path.join(Path(__file__).resolve().parent, "pixellari.ttf")
 
 
 def composite_red_blk(blk_img: Image.Image, red_img: Image.Image) -> Image.Image:

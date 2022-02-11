@@ -152,7 +152,7 @@ def calc_prev_5_hours_wind_mean(now_dt: datetime, graph_summary_data: dict, tz: 
     return prev_6_hours
 
 
-def calc_next_10_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) -> HourlyData:
+def calc_next_12_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) -> HourlyData:
 
     if not now_dt.tzinfo:
         raise RuntimeError("Refusing to process naive datetime")
@@ -162,7 +162,7 @@ def calc_next_10_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo)
 
     next_8_hours = []
 
-    for i in range(1, 10):
+    for i in range(1, 12):
         hourkey = get_hour_key(now_dt + timedelta(hours=i))
         next_8_hours.append(
             (get_int_from_hour_key(hourkey), hourly_avg.get(hourkey, 0))
@@ -311,7 +311,7 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
             get_int_from_hour_key(get_hour_key(now_local)),
             float(graph_summary_data["last_ob_avg"])
         )]
-        hourlies_future = calc_next_10_hours_wind_mean(
+        hourlies_future = calc_next_12_hours_wind_mean(
             now_local, model_data, TZ)
         hourlies = list(chain(
             ((hour, val, True) for hour, val in hourlies_past),

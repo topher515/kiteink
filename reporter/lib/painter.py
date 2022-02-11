@@ -25,7 +25,7 @@ DIMENSIONS = (800, 480)
 WHITE_BIT = 1
 BLACK_BIT = 0
 
-TZ = pytz.timezone("HST")
+TZ = pytz.timezone("Pacific/Honolulu")
 
 CONSIDERED_OLD = timedelta(hours=1)
 
@@ -192,7 +192,7 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
         write_text((x_start, 110), fnt_20, now_local.strftime("%H:%M %Z"))
         write_text((x_start, 190), fnt_40, "Today")
         write_text((x_start, 230), fnt_20, now_local.strftime("%b %d"))
-        write_text((x_start, 350), fnt_40, "7 Day", red=True)
+        write_text((x_start, 350), fnt_40, "7 Day")
 
     def paint_col2(x_start: int):
 
@@ -205,9 +205,13 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
         write_text((x_start, 10), fnt_30, spot_name)
 
         # Write Last updated
-        last_fetch = datetime.fromtimestamp(
-            graph_summary_data["current_time_epoch_utc"]/1000)  # .astimezone(pytz.UTC)
-        last_fetch_local = TZ.fromutc(last_fetch)
+        last_fetch = dateutil.parser.isoparse(
+            graph_summary_data["current_time_local"])
+        last_fetch = last_fetch.replace(
+            tzinfo=pytz.timezone(graph_summary_data["local_timezone"]))
+        # last_fetch = datetime.fromtimestamp(
+        #     graph_summary_data["current_time_epoch_utc"]/1000).replace(tzinfo=pytz.UTC)
+        last_fetch_local = last_fetch.astimezone(TZ)
 
         if now_local - last_fetch_local > CONSIDERED_OLD:
             # Is old data

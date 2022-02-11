@@ -1,6 +1,6 @@
 
 #!/usr/bin/env python3
-import collections
+import collections.abc
 import json
 import sys
 import re
@@ -23,7 +23,7 @@ def main():
     args = parser.parse_args()
     spots_data = json.load(args.infile)
 
-    if not isinstance(spots_data, collections.Sequence):
+    if not isinstance(spots_data, collections.abc.Sequence):
         spots_data = [spots_data]
 
     img = paint_display_image(spots_data)

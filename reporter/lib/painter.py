@@ -143,6 +143,25 @@ def calc_next_8_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) 
     return next_8_hours
 
 
+def calc_next_180_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo):
+
+    if not now_dt.tzinfo:
+        raise RuntimeError("Refusing to process naive datetime")
+
+    hourlies = group_by_hour_model_items(model_data["model_data"], tz)
+    hourly_avg = dict(mean_data(hourlies))
+
+    next_180_hours = []
+
+    for i in range(1, 181):
+        hourkey = get_hour_key(now_dt + timedelta(hours=i))
+        next_180_hours.append(
+            (get_int_from_hour_key(hourkey), hourly_avg.get(hourkey, 0))
+        )
+
+    return next_180_hours
+
+
 def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Image.Image]:
     '''
     Returns black
@@ -166,7 +185,7 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
         d = draw_red if red else draw_blk
         d.text(coords, text, font=fnt, fill=BLACK_BIT, )
 
-    def write_hourlies(coords: Tuple[int, int], hourlies: Sequence[Tuple[int, float, bool]], width: int = 2, filled=True, red=False, pixels_per_unit=4):
+    def write_hourlies(coords: Tuple[int, int], hourlies: Sequence[Tuple[int, float, bool]], width: int = 2, red=False, pixels_per_unit=4, x_axis_skip=2):
         d = draw_red if red else draw_blk
 
         x_start, y_start = coords
@@ -182,7 +201,7 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
             d.rectangle((x, y - 5, x + width, y - (5 + value*pixels_per_unit)),
                         outline=BLACK_BIT, fill=BLACK_BIT if filled else WHITE_BIT, width=1)
 
-            if i % 2 == 0:
+            if i % x_axis_skip == 0:
                 # Print every other hour
                 write_text((x, y), fnt_sm, str(hour), red=red)
             x += width
@@ -241,17 +260,27 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
             ((hour, val, True) for hour, val in hourlies_now),
             ((hour, val, False) for hour, val in hourlies_future)
         ))
-        write_hourlies((x_start, 300), hourlies, filled=True, width=10)
+        write_hourlies((x_start, 300), hourlies, width=10)
+
+        # Write this week bar chart
+        hourlies_distant_future = calc_next_180_hours_wind_mean(
+            now_local, model_data, TZ)
+        hourlies = [(hour, val, False)
+                    for hour, val in hourlies_distant_future]
+
+        # import pdb
+        # pdb.set_trace()
+        write_hourlies((x_start, 450), hourlies, width=2, x_axis_skip=15)
 
     paint_header_col(10)
 
-    spot_x = 200
+    spot_x = 150
     for spot_data in spots_data:
         graph_summary_data: dict = spot_data["graph_summary"]
         model_data: dict = spot_data["models"]["-1"]
         gauge_img_data: Union[str, bytes] = spot_data["gauge_img"]
-        paint_spot_col(spot_x, graph_summary_data, gauge_img_data, model_data,)
-        spot_x += 200
+        paint_spot_col(spot_x, graph_summary_data, gauge_img_data, model_data)
+        spot_x += 220
 
     return (base_blk, base_red)
 

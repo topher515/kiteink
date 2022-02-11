@@ -55,6 +55,14 @@ def get_hour_key(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H")
 
 
+def get_div_hr_key(dt: datetime, mod: int) -> str:
+    return dt.strftime("%Y-%m-%dT") + str(int(dt.hour / 3))
+
+
+def get_3hr_key(dt: datetime) -> str:
+    return get_div_hr_key(dt, 3)
+
+
 def get_int_from_hour_key(hourkey: str) -> int:
     return int(hourkey.split("T")[1])
 
@@ -80,6 +88,19 @@ def group_by_hour_historical_tuples(data: Sequence[Tuple[float, float]], data_tz
 
     def get_value(datum) -> float:
         return datum[1]
+
+    return group_by(data, _get_hour_key, get_value)
+
+
+def group_by_3hr_model_items(data: Sequence[dict], to_tz: tzinfo):
+
+    def _get_hour_key(datum: dict) -> str:
+        dt = dateutil.parser.isoparse(datum['model_time_utc'])
+        dt_local: datetime = dt.astimezone(to_tz)
+        return get_3hr_key(dt_local)
+
+    def get_value(datum) -> float:
+        return datum["wind_speed"]
 
     return group_by(data, _get_hour_key, get_value)
 
@@ -124,7 +145,7 @@ def calc_prev_5_hours_wind_mean(now_dt: datetime, graph_summary_data: dict, tz: 
     return prev_6_hours
 
 
-def calc_next_8_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) -> HourlyData:
+def calc_next_10_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) -> HourlyData:
 
     if not now_dt.tzinfo:
         raise RuntimeError("Refusing to process naive datetime")
@@ -134,7 +155,7 @@ def calc_next_8_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) 
 
     next_8_hours = []
 
-    for i in range(1, 8):
+    for i in range(1, 10):
         hourkey = get_hour_key(now_dt + timedelta(hours=i))
         next_8_hours.append(
             (get_int_from_hour_key(hourkey), hourly_avg.get(hourkey, 0))
@@ -143,23 +164,30 @@ def calc_next_8_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) 
     return next_8_hours
 
 
-def calc_next_180_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo):
+def calc_next_60_3hr_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo):
 
     if not now_dt.tzinfo:
         raise RuntimeError("Refusing to process naive datetime")
 
-    hourlies = group_by_hour_model_items(model_data["model_data"], tz)
+    hourlies = group_by_3hr_model_items(model_data["model_data"], tz)
     hourly_avg = dict(mean_data(hourlies))
 
-    next_180_hours = []
+    next_60_time_blocks = []
 
-    for i in range(1, 181):
-        hourkey = get_hour_key(now_dt + timedelta(hours=i))
-        next_180_hours.append(
-            (get_int_from_hour_key(hourkey), hourly_avg.get(hourkey, 0))
+    def calc_day_of_week(_3hrkey: str):
+        dt = datetime.strptime(_3hrkey, "%Y-%m-%dT%H").replace(tzinfo=tz)
+        return dt.strftime("%a")
+
+    for i in range(1, 181, 3):
+        _3hrkey = get_3hr_key(now_dt + timedelta(hours=i))
+        next_60_time_blocks.append(
+            (calc_day_of_week(_3hrkey), hourly_avg.get(_3hrkey, 0))
         )
 
-    return next_180_hours
+    return next_60_time_blocks
+
+
+BarChartDatum = Tuple[Union[str, int], float, bool]
 
 
 def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Image.Image]:
@@ -185,7 +213,7 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
         d = draw_red if red else draw_blk
         d.text(coords, text, font=fnt, fill=BLACK_BIT, )
 
-    def write_hourlies(coords: Tuple[int, int], hourlies: Sequence[Tuple[int, float, bool]], width: int = 2, red=False, pixels_per_unit=4, x_axis_skip=2):
+    def write_bar_chart(coords: Tuple[int, int], hourlies: Sequence[BarChartDatum], width: int = 2, red=False, pixels_per_unit=4, x_axis_skip=2):
         d = draw_red if red else draw_blk
 
         x_start, y_start = coords
@@ -197,13 +225,13 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
 
         x = x_start + 10
         y = y_start
-        for i, (hour, value, filled) in enumerate(hourlies):
+        for i, (label, value, filled) in enumerate(hourlies):
             d.rectangle((x, y - 5, x + width, y - (5 + value*pixels_per_unit)),
                         outline=BLACK_BIT, fill=BLACK_BIT if filled else WHITE_BIT, width=1)
 
             if i % x_axis_skip == 0:
                 # Print every other hour
-                write_text((x, y), fnt_sm, str(hour), red=red)
+                write_text((x, y), fnt_sm, str(label), red=red)
             x += width
 
     def paint_header_col(x_start: int):
@@ -253,24 +281,34 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
             get_int_from_hour_key(get_hour_key(now_local)),
             float(graph_summary_data["last_ob_avg"])
         )]
-        hourlies_future = calc_next_8_hours_wind_mean(
+        hourlies_future = calc_next_10_hours_wind_mean(
             now_local, model_data, TZ)
         hourlies = list(chain(
             ((hour, val, True) for hour, val in hourlies_past),
             ((hour, val, True) for hour, val in hourlies_now),
             ((hour, val, False) for hour, val in hourlies_future)
         ))
-        write_hourlies((x_start, 300), hourlies, width=10)
+        write_bar_chart((x_start, 300), hourlies, width=10)
 
         # Write this week bar chart
-        hourlies_distant_future = calc_next_180_hours_wind_mean(
+        _3hrsly_distant_future = calc_next_60_3hr_wind_mean(
             now_local, model_data, TZ)
-        hourlies = [(hour, val, False)
-                    for hour, val in hourlies_distant_future]
+        _3hrlies = []
+        last_seen_label = None
+        for label, val in _3hrsly_distant_future:
+            if not last_seen_label:
+                _3hrlies.append(("", val, False))
+                last_seen_label = label
+            elif last_seen_label != label:
+                # Every new day gets a filled bar
+                _3hrlies.append((label, val, True))
+                last_seen_label = label
+            else:
+                _3hrlies.append(("", val, False))
 
         # import pdb
         # pdb.set_trace()
-        write_hourlies((x_start, 450), hourlies, width=2, x_axis_skip=15)
+        write_bar_chart((x_start, 450), _3hrlies, width=3, x_axis_skip=1)
 
     paint_header_col(10)
 

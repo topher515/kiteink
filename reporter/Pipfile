@@ -8,6 +8,7 @@ pillow = "*"
 requests = "*"
 pytz = "*"
 python-dateutil = "*"
+qrcode = "*"
 
 [dev-packages]
 mypy = "*"

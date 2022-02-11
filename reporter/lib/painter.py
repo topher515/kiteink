@@ -1,5 +1,7 @@
 import os
+import shutil
 import statistics
+from tempfile import NamedTemporaryFile
 import textwrap
 from base64 import b64decode
 from datetime import datetime, timedelta, tzinfo
@@ -12,6 +14,7 @@ from typing import Callable, Dict, Sequence, Tuple, Union
 
 import dateutil.parser
 import pytz
+import qrcode
 from PIL import Image, ImageDraw, ImageFont
 
 # More fonts https://www.dafont.com/bitmap.php
@@ -27,6 +30,10 @@ BLACK_BIT = 0
 TZ = pytz.timezone("Pacific/Honolulu")
 
 CONSIDERED_OLD = timedelta(hours=1)
+
+
+def get_spot_website_url(spot_id: int):
+    return f'https://wx.ikitesurf.com/spot/{spot_id}'
 
 
 def get_font_path():
@@ -234,6 +241,25 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
                 write_text((x, y), fnt_sm, str(label), red=red)
             x += width
 
+    def write_qrcode(coords: Tuple[int, int], data: str, red=False):
+        base_img = base_red if red else base_blk
+
+        with NamedTemporaryFile("wb", delete=False) as fp_w:
+            qr = qrcode.QRCode(
+                box_size=2,
+                border=1,
+            )
+            qr.add_data(data)
+            qr.make(fit=True)
+            img = qr.make_image()
+            img.save(fp_w)
+
+        with open(fp_w.name, 'rb') as fp_r:
+            qrcode_img = Image.open(fp_r)
+            base_img.paste(qrcode_img, coords)
+
+        os.remove(fp_w.name)
+
     def paint_header_col(x_start: int):
 
         write_text((x_start, 70), fnt_40, "Now")
@@ -273,6 +299,10 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
         gauge_img = Image.open(BytesIO(b64decode(gauge_img_data))).convert("1")
         base_blk.paste(gauge_img.crop((20, 20, 160, 160)
                                       ).resize((100, 100)), (x_start, 70))
+
+        # Write qrcode
+        write_qrcode((x_start+120, 70),
+                     get_spot_website_url(model_data["spot_id"]))
 
         # Write today bar chart
         hourlies_past = calc_prev_5_hours_wind_mean(

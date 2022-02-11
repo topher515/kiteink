@@ -143,10 +143,11 @@ def calc_next_8_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) 
     return next_8_hours
 
 
-def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img_data: Union[str, bytes]) -> Tuple[Image.Image, Image.Image]:
+def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Image.Image]:
     '''
     Returns black
     '''
+
     base_blk = Image.new("1", DIMENSIONS, WHITE_BIT)
     base_red = Image.new("1", DIMENSIONS, WHITE_BIT)
 
@@ -186,7 +187,7 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
                 write_text((x, y), fnt_sm, str(hour), red=red)
             x += width
 
-    def paint_col1(x_start: int):
+    def paint_header_col(x_start: int):
 
         write_text((x_start, 70), fnt_40, "Now")
         write_text((x_start, 110), fnt_20, now_local.strftime("%H:%M %Z"))
@@ -194,7 +195,7 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
         write_text((x_start, 230), fnt_20, now_local.strftime("%b %d"))
         write_text((x_start, 350), fnt_40, "7 Day")
 
-    def paint_col2(x_start: int):
+    def paint_spot_col(x_start: int, graph_summary_data: dict, gauge_img_data: Union[str, bytes], model_data: dict):
 
         # Write Spot title
         spot_name = graph_summary_data["name"][:8]
@@ -242,16 +243,19 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
         ))
         write_hourlies((x_start, 300), hourlies, filled=True, width=10)
 
-    paint_col1(10)
-    paint_col2(200)
+    paint_header_col(10)
+
+    spot_x = 200
+    for spot_data in spots_data:
+        graph_summary_data: dict = spot_data["graph_summary"]
+        model_data: dict = spot_data["models"]["-1"]
+        gauge_img_data: Union[str, bytes] = spot_data["gauge_img"]
+        paint_spot_col(spot_x, graph_summary_data, gauge_img_data, model_data,)
+        spot_x += 200
 
     return (base_blk, base_red)
 
 
-def paint_display_image(graph_summary_data: dict, model_data: dict, gauge_img: bytes) -> Image.Image:
-    blk_img, red_img = paint_blk_and_red_imgs(
-        graph_summary_data,
-        model_data,
-        gauge_img
-    )
+def paint_display_image(spots_data:  Sequence[dict]) -> Image.Image:
+    blk_img, red_img = paint_blk_and_red_imgs(spots_data)
     return composite_red_blk(blk_img, red_img)

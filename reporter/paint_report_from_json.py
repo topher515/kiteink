@@ -1,5 +1,6 @@
 
 #!/usr/bin/env python3
+import collections
 import json
 import sys
 import re
@@ -20,15 +21,17 @@ def main():
                         type=argparse.FileType('wb'))
 
     args = parser.parse_args()
-    data = json.load(args.infile)
+    spots_data = json.load(args.infile)
 
-    img = paint_display_image(
-        data["graph_summary"], data["models"]["-1"], data["gauge_img"])
+    if not isinstance(spots_data, collections.Sequence):
+        spots_data = [spots_data]
+
+    img = paint_display_image(spots_data)
 
     def make_default_filename():
-        spot_name = data["graph_summary"]["name"]
-        spot_slug = re.sub(r'\s', '_', spot_name)
-        return f"{spot_slug}-report-v{VER}.png"
+        # spot_name = data["graph_summary"]["name"]
+        # spot_slug = re.sub(r'\s', '_', spot_name)
+        return f"latest-report-v{VER}.png"
 
     fp = args.outfile if args.outfile else open(make_default_filename(), 'wb')
 

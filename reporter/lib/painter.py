@@ -1,16 +1,19 @@
+import os
+import statistics
+import textwrap
 from base64 import b64decode
 from collections import defaultdict
 from datetime import datetime, timedelta, tzinfo
-import statistics
+from email.headerregistry import Group
 from io import BytesIO
-from itertools import groupby
-import os
+from itertools import chain, groupby
 from pathlib import Path
-import textwrap
 from time import timezone
-from typing import Dict, Sequence, Tuple, Union
-from PIL import Image, ImageColor, ImageFont, ImageDraw
+from typing import Callable, Dict, Sequence, Tuple, Union
+
+import dateutil.parser
 import pytz
+from PIL import Image, ImageColor, ImageDraw, ImageFont
 
 # More fonts https://www.dafont.com/bitmap.php
 # https://lucid.app/lucidchart/6a918925-6ff7-4aff-91ce-f57223f1599a/edit?beaconFlowId=B86FF4B9E5FF811D&invitationId=inv_afc6c6ae-b5ad-4c89-bf62-57c523d488b7&page=0_0#
@@ -22,7 +25,7 @@ DIMENSIONS = (800, 480)
 WHITE_BIT = 1
 BLACK_BIT = 0
 
-TZ = "HST"
+TZ = pytz.timezone("HST")
 
 CONSIDERED_OLD = timedelta(hours=1)
 
@@ -48,42 +51,63 @@ def calc_180_graph_avg_wind_speed(now_dt: datetime, graph_summary_data: dict):
             "Will not calculate graph avg wind speed for naive datetime")
 
 
-# graph_summary_data["wind_avg_data"]
-
-TimestampedDatum = Tuple[float, float]
-
-
 def get_hour_key(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H")
 
 
-def group_by_hour(data: Sequence[TimestampedDatum], tz: tzinfo = pytz.UTC) -> Sequence[Tuple[str, Sequence[float]]]:
+GroupedData = Sequence[Tuple[str, Sequence[float]]]
 
-    def get_hour_key_from_timestamp(timestamp: float) -> str:
-        # timestamp, value = datum
-        dt = datetime.fromtimestamp(timestamp/1000)
-        dt_local: datetime = tz.fromutc(dt)
+SummaryData = Sequence[Tuple[str, float]]
+
+HourlyData = Sequence[Tuple[int, float]]
+
+
+def group_by(data: Sequence, get_key: Callable, get_value: Callable) -> GroupedData:
+    groupby_iter = groupby(data, get_key)
+    return [(key, [x for x in (get_value(item) for item in group) if x]) for key, group in groupby_iter]
+
+
+def group_by_hour_historical_tuples(data: Sequence[Tuple[float, float]], data_tz: tzinfo, to_tz: tzinfo) -> GroupedData:
+
+    def _get_hour_key(datum) -> str:
+        dt = datetime.fromtimestamp(datum[0]/1000).replace(tzinfo=data_tz)
+        dt_local: datetime = dt.astimezone(to_tz)
         return get_hour_key(dt_local)
 
-    hourly = defaultdict(list)
-    for timestamp, value in data:
-        hourly[get_hour_key_from_timestamp(timestamp)].append(value)
+    def get_value(datum) -> float:
+        return datum[1]
 
-    groupby_iter = groupby(
-        data, lambda datum: get_hour_key_from_timestamp(datum[0]))
-    return [(hourkey, [value for timestamp, value in group if value is not None]) for hourkey, group in groupby_iter]
+    return group_by(data, _get_hour_key, get_value)
 
 
-def mean_data(data: Sequence[Tuple[str, Sequence[float]]]) -> Sequence[Tuple[str, float]]:
+def group_by_hour_model_items(data: Sequence[dict], to_tz: tzinfo):
+
+    def _get_hour_key(datum: dict) -> str:
+        dt = dateutil.parser.isoparse(datum['model_time_utc'])
+        dt_local: datetime = dt.astimezone(to_tz)
+        print(dt_local.isoformat())
+        return get_hour_key(dt_local)
+
+    def get_value(datum) -> float:
+        return datum["wind_speed"]
+
+    return group_by(data, _get_hour_key, get_value)
+
+
+def mean_data(data: Sequence[Tuple[str, Sequence[float]]]) -> SummaryData:
     return [(hour, (statistics.mean(value_list) if value_list else 0)) for hour, value_list in data]
 
 
-def calc_prev_6_hours_wind_mean(now_dt: datetime, graph_summary_data: dict):
+def calc_prev_6_hours_wind_mean(now_dt: datetime, graph_summary_data: dict, tz: tzinfo) -> HourlyData:
 
     if not now_dt.tzinfo:
         raise RuntimeError("Refuding to process naive datetime")
 
-    hourlies = group_by_hour(graph_summary_data["wind_avg_data"])
+    hourlies = group_by_hour_historical_tuples(
+        graph_summary_data["wind_avg_data"],
+        pytz.timezone(graph_summary_data["local_timezone"]),
+        tz
+    )
 
     hourly_avg = dict(mean_data(hourlies))
 
@@ -94,8 +118,26 @@ def calc_prev_6_hours_wind_mean(now_dt: datetime, graph_summary_data: dict):
         prev_6_hours.append(
             (int(hourkey.split("T")[1]), hourly_avg.get(hourkey, 0))
         )
-
     return prev_6_hours
+
+
+def calc_next_8_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) -> HourlyData:
+
+    if not now_dt.tzinfo:
+        raise RuntimeError("Refusing to process naive datetime")
+
+    hourlies = group_by_hour_model_items(model_data["model_data"], tz)
+    hourly_avg = dict(mean_data(hourlies))
+
+    next_8_hours = []
+
+    for i in range(1, 8):
+        hourkey = get_hour_key(now_dt + timedelta(hours=i))
+        next_8_hours.append(
+            (int(hourkey.split("T")[1]), hourly_avg.get(hourkey, 0))
+        )
+
+    return next_8_hours
 
 
 def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img_data: Union[str, bytes]) -> Tuple[Image.Image, Image.Image]:
@@ -114,14 +156,14 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
     fnt_20 = ImageFont.truetype(get_font_path(), 20)
     fnt_12 = ImageFont.truetype(get_font_path(), 10)
 
-    now_local = pytz.timezone(TZ).fromutc(
+    now_local = TZ.fromutc(
         datetime.utcnow())
 
     def write_text(coords: Tuple[int, int], fnt: ImageFont.FreeTypeFont, text: str, red=False):
         d = draw_red if red else draw_blk
         d.text(coords, text, font=fnt, fill=BLACK_BIT, )
 
-    def write_hourlies(coords: Tuple[int, int], hourlies: Sequence[Tuple[int, float]], width: int = 2, filled=True, red=False, pixels_per_unit=4):
+    def write_hourlies(coords: Tuple[int, int], hourlies: Sequence[Tuple[int, float, bool]], width: int = 2, filled=True, red=False, pixels_per_unit=4):
         d = draw_red if red else draw_blk
 
         x_start, y_start = coords
@@ -133,7 +175,7 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
 
         x = x_start + 10
         y = y_start
-        for i, (hour, value) in enumerate(hourlies):
+        for i, (hour, value, filled) in enumerate(hourlies):
             d.rectangle((x, y - 5, x + width, y - (5 + value*pixels_per_unit)),
                         outline=BLACK_BIT, fill=BLACK_BIT if filled else WHITE_BIT, width=1)
 
@@ -163,7 +205,7 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
         # Write Last updated
         last_fetch = datetime.fromtimestamp(
             graph_summary_data["current_time_epoch_utc"]/1000)  # .astimezone(pytz.UTC)
-        last_fetch_local = pytz.timezone(TZ).fromutc(last_fetch)
+        last_fetch_local = TZ.fromutc(last_fetch)
 
         if now_local - last_fetch_local > CONSIDERED_OLD:
             # Is old data
@@ -179,8 +221,14 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
                                       ).resize((100, 100)), (x_start, 70))
 
         # Write today bar chart
-        hourlies = calc_prev_6_hours_wind_mean(now_local, graph_summary_data)
-        print(hourlies)
+        hourlies_past = calc_prev_6_hours_wind_mean(
+            now_local, graph_summary_data, TZ)
+        hourlies_future = calc_next_8_hours_wind_mean(
+            now_local, model_data, TZ)
+        hourlies = list(chain(
+            ((hour, val, True) for hour, val in hourlies_past),
+            ((hour, val, False) for hour, val in hourlies_future)
+        ))
         write_hourlies((x_start, 300), hourlies, filled=True, width=10)
 
     paint_col1(10)

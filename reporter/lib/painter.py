@@ -55,6 +55,10 @@ def get_hour_key(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H")
 
 
+def get_int_from_hour_key(hourkey: str) -> int:
+    return int(hourkey.split("T")[1])
+
+
 GroupedData = Sequence[Tuple[str, Sequence[float]]]
 
 SummaryData = Sequence[Tuple[str, float]]
@@ -85,7 +89,6 @@ def group_by_hour_model_items(data: Sequence[dict], to_tz: tzinfo):
     def _get_hour_key(datum: dict) -> str:
         dt = dateutil.parser.isoparse(datum['model_time_utc'])
         dt_local: datetime = dt.astimezone(to_tz)
-        print(dt_local.isoformat())
         return get_hour_key(dt_local)
 
     def get_value(datum) -> float:
@@ -98,7 +101,7 @@ def mean_data(data: Sequence[Tuple[str, Sequence[float]]]) -> SummaryData:
     return [(hour, (statistics.mean(value_list) if value_list else 0)) for hour, value_list in data]
 
 
-def calc_prev_6_hours_wind_mean(now_dt: datetime, graph_summary_data: dict, tz: tzinfo) -> HourlyData:
+def calc_prev_5_hours_wind_mean(now_dt: datetime, graph_summary_data: dict, tz: tzinfo) -> HourlyData:
 
     if not now_dt.tzinfo:
         raise RuntimeError("Refuding to process naive datetime")
@@ -113,10 +116,10 @@ def calc_prev_6_hours_wind_mean(now_dt: datetime, graph_summary_data: dict, tz: 
 
     prev_6_hours = []
 
-    for i in reversed(range(6)):
+    for i in reversed(range(1, 6)):
         hourkey = get_hour_key(now_dt - timedelta(hours=i))
         prev_6_hours.append(
-            (int(hourkey.split("T")[1]), hourly_avg.get(hourkey, 0))
+            (get_int_from_hour_key(hourkey), hourly_avg.get(hourkey, 0))
         )
     return prev_6_hours
 
@@ -134,7 +137,7 @@ def calc_next_8_hours_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo) 
     for i in range(1, 8):
         hourkey = get_hour_key(now_dt + timedelta(hours=i))
         next_8_hours.append(
-            (int(hourkey.split("T")[1]), hourly_avg.get(hourkey, 0))
+            (get_int_from_hour_key(hourkey), hourly_avg.get(hourkey, 0))
         )
 
     return next_8_hours
@@ -154,10 +157,9 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
     fnt_40 = ImageFont.truetype(get_font_path(), 40)
     fnt_30 = ImageFont.truetype(get_font_path(), 30)
     fnt_20 = ImageFont.truetype(get_font_path(), 20)
-    fnt_12 = ImageFont.truetype(get_font_path(), 10)
+    fnt_sm = ImageFont.truetype(get_font_path(), 13)
 
-    now_local = TZ.fromutc(
-        datetime.utcnow())
+    now_local = datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(TZ)
 
     def write_text(coords: Tuple[int, int], fnt: ImageFont.FreeTypeFont, text: str, red=False):
         d = draw_red if red else draw_blk
@@ -171,7 +173,7 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
         for j in range(25):
             if j % 4 == 0:
                 write_text((x_start, y_start - (10 + j*pixels_per_unit)),
-                           fnt_12, str(j), red=red)
+                           fnt_sm, str(j), red=red)
 
         x = x_start + 10
         y = y_start
@@ -181,7 +183,7 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
 
             if i % 2 == 0:
                 # Print every other hour
-                write_text((x, y), fnt_12, str(hour), red=red)
+                write_text((x, y), fnt_sm, str(hour), red=red)
             x += width
 
     def paint_col1(x_start: int):
@@ -209,11 +211,11 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
 
         if now_local - last_fetch_local > CONSIDERED_OLD:
             # Is old data
-            write_text((x_start, 40), fnt_12,
-                       last_fetch_local.strftime("Old! %b %d, %H:%M %Z"), red=True)
+            write_text((x_start, 40), fnt_sm,
+                       last_fetch_local.strftime("old: %b %d, %H:%M %Z"), red=True)
         else:
-            write_text((x_start, 40), fnt_12,
-                       last_fetch_local.strftime("Last: %b %d, %H:%M %Z"))
+            write_text((x_start, 40), fnt_sm,
+                       last_fetch_local.strftime("last: %b %d, %H:%M %Z"))
 
         # Write Gauge
         gauge_img = Image.open(BytesIO(b64decode(gauge_img_data))).convert("1")
@@ -221,12 +223,17 @@ def paint_blk_and_red_imgs(graph_summary_data: dict, model_data: dict, gauge_img
                                       ).resize((100, 100)), (x_start, 70))
 
         # Write today bar chart
-        hourlies_past = calc_prev_6_hours_wind_mean(
+        hourlies_past = calc_prev_5_hours_wind_mean(
             now_local, graph_summary_data, TZ)
+        hourlies_now = [(
+            get_int_from_hour_key(get_hour_key(now_local)),
+            float(graph_summary_data["last_ob_avg"])
+        )]
         hourlies_future = calc_next_8_hours_wind_mean(
             now_local, model_data, TZ)
         hourlies = list(chain(
             ((hour, val, True) for hour, val in hourlies_past),
+            ((hour, val, True) for hour, val in hourlies_now),
             ((hour, val, False) for hour, val in hourlies_future)
         ))
         write_hourlies((x_start, 300), hourlies, filled=True, width=10)

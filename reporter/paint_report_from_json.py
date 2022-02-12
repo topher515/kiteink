@@ -12,6 +12,23 @@ from lib.painter import paint_display_image
 VER = 1
 
 
+def normalize_graph_summary_data(graph_summary_data: dict):
+    return {
+        **graph_summary_data,
+        "last_ob_avg": graph_summary_data.get("last_ob_avg", 0)
+    }
+
+
+def normalize_spot_data(spot_data: dict) -> dict:
+    return {
+        **spot_data,
+        "graph_summary": {
+            **spot_data["graph_summary"],
+            "last_ob_avg": spot_data["graph_summary"]["last_ob_avg"] or 0
+        }
+    }
+
+
 def main():
 
     parser = argparse.ArgumentParser()
@@ -26,7 +43,9 @@ def main():
     if not isinstance(spots_data, collections.abc.Sequence):
         spots_data = [spots_data]
 
-    img = paint_display_image(spots_data)
+    img = paint_display_image([
+        normalize_spot_data(d) for d in spots_data
+    ])
 
     def make_default_filename():
         # spot_name = data["graph_summary"]["name"]

@@ -3,6 +3,7 @@
 import argparse
 import concurrent.futures
 import json
+import os
 import re
 import sys
 from base64 import b64encode
@@ -25,16 +26,22 @@ def main():
     spot_name = 'Lanikai Beach'
     model_id = MODEL_ID_BY_NAME['Quicklook']
 
-    wfapi = WeatherflowApi(wf_token=WeatherflowApi.fetch_wf_token())
+    username = os.environ.get("WF_USERNAME", None)
+    pw = os.environ.get("WF_PASSWORD", None)
+    wfapi = WeatherflowApi(username=username, password=pw)
+    # wf_token=WeatherflowApi.fetch_wf_token())
 
     def fetch_spot_data(spot_id: str):
         print(f"Fetching spot {spot_id}", file=sys.stderr)
         graph_summary_data = wfapi.fetch_graph_summary(spot_id)
+        # graph_summary_data = normalize_graph_summary_data(graph_summary_data)
         model_data = wfapi.fetch_model(spot_id, model_id)
 
         gauge_img = wfapi.fetch_gauge_img(
-            int(graph_summary_data["last_ob_avg"]
-                ), graph_summary_data["last_ob_dir"], graph_summary_data["last_ob_dir_txt"]
+            # Decide if this is reasonable
+            int(graph_summary_data["last_ob_avg"] or 0),
+            graph_summary_data["last_ob_dir"],
+            graph_summary_data["last_ob_dir_txt"]
         )
 
         return (

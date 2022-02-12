@@ -185,7 +185,7 @@ def calc_next_60_3hr_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo):
         dt = datetime.strptime(_3hrkey, "%Y-%m-%dT%H").replace(tzinfo=tz)
         return dt.strftime("%a")
 
-    for i in range(1, 181, 3):
+    for i in range(1, 178, 3):
         _3hrkey = get_3hr_key(now_dt + timedelta(hours=i))
         next_60_time_blocks.append(
             (calc_day_of_week(_3hrkey), hourly_avg.get(_3hrkey, 0))

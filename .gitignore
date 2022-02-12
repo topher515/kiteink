@@ -1,3 +1,5 @@
 *report.png
 .DS_Store
 data
+.envrc
+__pycache__

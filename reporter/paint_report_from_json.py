@@ -3,11 +3,19 @@
 import collections.abc
 import json
 import sys
-import re
-from datetime import datetime
 import argparse
+import logging
 
-from lib.painter import paint_display_image
+from lib.painter import composite_red_blk_imgs, paint_blk_and_red_imgs
+
+# logging.basicConfig(level=logging.DEBUG)
+
+try:
+    from lib.epaper_display import epd_display_images
+except (ImportError, OSError) as err:
+    logging.warning(f"Failed to import epaper display module: {err}")
+    epd_display_images = None
+
 
 VER = 1
 
@@ -32,32 +40,49 @@ def normalize_spot_data(spot_data: dict) -> dict:
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('infile', nargs='?',
+    parser.add_argument('--infile', nargs='?',
                         type=argparse.FileType('r'), default=sys.stdin)
-    parser.add_argument('outfile', nargs='?',
-                        type=argparse.FileType('wb'))
 
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--outfile', nargs='?',
+                       type=argparse.FileType('wb'))
+    ep_action = group.add_argument(
+        '--epaper', action='store_true', default=False)
+    group.add_argument(
+        '--show', action='store_true', default=False)
     args = parser.parse_args()
+
     spots_data = json.load(args.infile)
 
     if not isinstance(spots_data, collections.abc.Sequence):
         spots_data = [spots_data]
 
-    img = paint_display_image([
+    normalized_spots_data = [
         normalize_spot_data(d) for d in spots_data
-    ])
+    ]
 
-    def make_default_filename():
-        # spot_name = data["graph_summary"]["name"]
-        # spot_slug = re.sub(r'\s', '_', spot_name)
-        return f"latest-report-v{VER}.png"
+    blk_img, red_img = paint_blk_and_red_imgs(normalized_spots_data)
 
-    fp = args.outfile if args.outfile else open(make_default_filename(), 'wb')
+    if args.epaper:
+        if not epd_display_images:
+            raise argparse.ArgumentError(
+                ep_action, "Failed to import epaper module--cannot output to epaper")
 
-    try:
-        img.save(fp, 'png')
-    finally:
-        fp.close()
+        epd_display_images(blk_img, red_img)
+
+    if args.show:
+        img = composite_red_blk_imgs(blk_img, red_img)
+        img.show()
+
+    if args.outfile:
+        img = composite_red_blk_imgs(blk_img, red_img)
+
+        fp = args.outfile if args.outfile else open(
+            f"latest-report-v{VER}.png", 'wb')
+        try:
+            img.save(fp, 'png')
+        finally:
+            fp.close()
 
 
 if __name__ == '__main__':

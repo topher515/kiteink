@@ -1,0 +1,8 @@
+LICENSE.txt
+README.md
+pyproject.toml
+setup.py
+src/dummy_rpi_gpio.egg-info/PKG-INFO
+src/dummy_rpi_gpio.egg-info/SOURCES.txt
+src/dummy_rpi_gpio.egg-info/dependency_links.txt
+src/dummy_rpi_gpio.egg-info/top_level.txt

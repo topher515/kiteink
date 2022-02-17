@@ -38,10 +38,10 @@ def get_spot_website_url(spot_id: int):
 
 def get_font_path():
     # "vcr_osd_mono_1.ttf")
-    return os.path.join(Path(__file__).resolve().parent, "pixellari.ttf")
+    return os.path.join(Path(__file__).resolve().parent, "fonts/pixellari.ttf")
 
 
-def composite_red_blk(blk_img: Image.Image, red_img: Image.Image) -> Image.Image:
+def composite_red_blk_imgs(blk_img: Image.Image, red_img: Image.Image) -> Image.Image:
     img_color = Image.new("RGB", DIMENSIONS, (255, 255, 255))
     out = Image.composite(img_color, blk_img, blk_img)
     out = Image.composite(out, Image.new(
@@ -353,6 +353,6 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
     return (base_blk, base_red)
 
 
-def paint_display_image(spots_data:  Sequence[dict]) -> Image.Image:
+def paint_composite_img(spots_data:  Sequence[dict]) -> Image.Image:
     blk_img, red_img = paint_blk_and_red_imgs(spots_data)
-    return composite_red_blk(blk_img, red_img)
+    return composite_red_blk_imgs(blk_img, red_img)

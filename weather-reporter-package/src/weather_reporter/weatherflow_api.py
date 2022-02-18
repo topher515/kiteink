@@ -8,7 +8,6 @@ from io import BytesIO
 from typing import Optional, Union
 import requests
 import re
-import curlify
 
 
 # https://wx.ikitesurf.com/spot/187573
@@ -226,9 +225,6 @@ class WeatherflowApi:
 
         resp.raise_for_status()
         return resp.json()
-
-    # def fetch_and_process_lanikai_beach():
-    #     graph_data = fetch_graph(SPOT_ID_BY_NAME['Lanikai Beach'])
 
     def fetch_gauge_img(self, wind_speed: int, wind_dir: int, wind_dir_txt: str) -> BytesIO:
         resp = self.sesh.get(

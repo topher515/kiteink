@@ -9,7 +9,7 @@ def epd_display_images(img_blk: Image.Image, img_red: Image.Image):
     try:
         epd = epd7in5b_V2.EPD()
         epd.init()
-        epd.Clear()
+        # epd.Clear()
         epd.display(epd.getbuffer(img_blk), epd.getbuffer(img_red))
         epd.sleep()
 

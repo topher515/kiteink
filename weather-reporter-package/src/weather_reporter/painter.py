@@ -262,8 +262,9 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
 
     def paint_header_col(x_start: int):
 
-        write_text((x_start, 70), fnt_40, "Now")
-        write_text((x_start, 110), fnt_20, now_local.strftime("%H:%M %Z"))
+        write_text((x_start, 70), fnt_40, "Now", red=True)
+        write_text((x_start, 110), fnt_20,
+                   now_local.strftime("%H:%M %Z"), red=True)
         write_text((x_start, 190), fnt_40, "Today")
         write_text((x_start, 230), fnt_20, now_local.strftime("%b %d"))
         write_text((x_start, 350), fnt_40, "7 Day")

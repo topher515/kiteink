@@ -1,2 +1,3 @@
-WF_USERNAME='foo...bar'
-WF_PASSWORD='foo...baz'
+export WF_USERNAME='foo...bar'
+export WF_PASSWORD='foo...baz'
+export RPI_IP="192.168.1.208"

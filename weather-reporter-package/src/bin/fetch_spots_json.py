@@ -9,7 +9,7 @@ import sys
 from base64 import b64encode
 from datetime import datetime
 
-from lib.weatherflow_api import MODEL_ID_BY_NAME, WeatherflowApi
+from weather_reporter.weatherflow_api import MODEL_ID_BY_NAME, WeatherflowApi
 
 
 def main():

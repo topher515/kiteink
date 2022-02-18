@@ -10,6 +10,7 @@ pytz = "*"
 python-dateutil = "*"
 qrcode = "*"
 waveshare-epd = {subdirectory = "RaspberryPi_JetsonNano/python", editable = true, git = "https://github.com/waveshare/e-Paper.git"}
+weather-reporter = {editable = true, path = "./weather-reporter-package"}
 
 [dev-packages]
 mypy = "*"

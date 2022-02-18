@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "04d2b2b366421b06408ee16ead16e4c711f86ec7a177063f44d9ba4906e7b0b3"
+            "sha256": "7aff5aff5e405f9363475ddcbe7d84f69be09bdd2364c4c58e923829586d9169"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -163,6 +163,10 @@
             "git": "https://github.com/waveshare/e-Paper.git",
             "ref": "ba202c58ec5a26bbc3dad4d3065ec597d730f373",
             "subdirectory": "RaspberryPi_JetsonNano/python"
+        },
+        "weather-reporter": {
+            "editable": true,
+            "path": "./weather-reporter-package"
         }
     },
     "develop": {

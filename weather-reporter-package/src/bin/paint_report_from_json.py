@@ -6,12 +6,12 @@ import sys
 import argparse
 import logging
 
-from lib.painter import composite_red_blk_imgs, paint_blk_and_red_imgs
+from weather_reporter.painter import composite_red_blk_imgs, paint_blk_and_red_imgs
 
 # logging.basicConfig(level=logging.DEBUG)
 
 try:
-    from lib.epaper_display import epd_display_images
+    from weather_reporter.epaper_display import epd_display_images
 except (ImportError, OSError) as err:
     logging.warning(f"Failed to import epaper display module: {err}")
     epd_display_images = None

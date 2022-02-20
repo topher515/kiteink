@@ -5,12 +5,9 @@ import json
 import sys
 import time
 from io import BytesIO
-from typing import Optional, Union
+from typing import Optional, cast
 import requests
-import re
 
-
-# https://wx.ikitesurf.com/spot/187573
 
 SAMPLE_BASE_URL = 'https://api.weatherflow.com/wxengine/rest/stat/getSpotStats?callback=jQuery17209069701420982021_1644300565073&units_wind=mph&units_temp=f&units_distance=mi&threshold_list=0%2C10%2C15%2C20%2C25&years_back=50&full_day=false&spot_id=187573&wf_token=e5615b765be6c96e23cc17cba3373778&_=1644300565399'
 
@@ -28,7 +25,6 @@ BASE_HEADERS = {
 
 HTML_HEADERS = {
     **BASE_HEADERS,
-    # 'authority': 'wx.ikitesurf.com',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
     'accept-encoding': 'gzip, deflate, br',
     'Referer': 'https://wx.ikitesurf.com/',
@@ -38,18 +34,6 @@ HTML_HEADERS = {
     'sec-fetch-site': 'cross-site',
     'sec-fetch-user': '?1',
 }
-
-# API_HEADERS = {
-#     **BASE_HEADERS,
-#     'Host': 'api.weatherflow.com',
-#     'accept': '*/*',
-#     'Connection': 'keep-alive',
-#     'accept-encoding': 'gzip, deflate, br',
-#     'Sec-Fetch-Dest': 'script',
-#     'Sec-Fetch-Mode': 'no-cors',
-#     'Sec-Fetch-Site': 'cross-site',
-#     'Referer': 'https://wx.ikitesurf.com/',
-# }
 
 LOGIN_HEADERS = {
     **BASE_HEADERS,
@@ -62,32 +46,6 @@ LOGIN_HEADERS = {
     'sec-fetch-user': '?1',
     'sec-fetch-dest': 'document',
     'referer': f'https://secure.ikitesurf.com/?app=wx&rd=spot/{DEFAULT_SPOT_ID}'
-    # 'cookie: ab=%7b%22lm%22%3a%22b%22%7d; wfToken=e5615b765be6c96e23cc17cba3373778; TemperatureUnits=f; SearchRadius=30; DistanceUnits=mi; SortOrder=rank; FavSortOrder=windspeed; AlertsSortOrder=userdefined; PrimaryMapType=High Contrast; fsv=list; uid=09296ad8-2441-4c79-b062-5843d689db7c; Profile=%5B%7B%22name%22%3A%22Favorites%22%2C%22profile_id%22%3A0%2C%22my_profile%22%3A%22true%22%2C%22created_by%22%3A%22local%22%2C%22favorite_spots%22%3A%5B%5D%2C%22containers%22%3A%5B%7B%22container_id%22%3A1%2C%22container_type_id%22%3A%22Favorite%20Spots%22%2C%22container_name%22%3A%22Favorite%20Spots%22%2C%22flowview_options%22%3Anull%2C%22options%22%3A%22%22%7D%5D%7D%5D; PreviousSearch=kailua; SpeedUnits=kts; _ga=GA1.2.1944158511.1644626857; _gid=GA1.2.625208938.1644626857; _gat=1' \
-
-}
-
-STATIC_COOKIES = {
-    # Profile stuff (what is this?)
-    'ActiveProfile': '349249',
-    'Profile': '%5B%7B%22name%22%3A%22Favorites%22%2C%22profile_id%22%3A0%2C%22my_profile%22%3A%22true%22%2C%22created_by%22%3A%22local%22%2C%22favorite_spots%22%3A%5B%5D%2C%22containers%22%3A%5B%7B%22container_id%22%3A1%2C%22container_type_id%22%3A%22Favorite%20Spots%22%2C%22container_name%22%3A%22Favorite%20Spots%22%2C%22flowview_options%22%3Anull%2C%22options%22%3A%22%22%7D%5D%7D%5D',
-    # Settings
-    'PreviousSearch': 'kailua',
-    'FXTableSettings': '%7B%22modelId%22%3A-1%2C%22zoom%22%3A%221%22%2C%22sevenDayMode%22%3A%22basic%22%2C%22dailyMode%22%3A%22basic%22%2C%22premiumShortModelOnOffSwitch%22%3A%22on%22%7D',
-    'PreviousMapZoom': '9',
-    'PreviousMapCenter': '21.654%2C-157.465',
-    'PlusFXTableSettings': '%7B%22modelId%22%3A-78%2C%22zoom%22%3A%221%22%2C%22sevenDayMode%22%3A%22basic%22%2C%22dailyMode%22%3A%22basic%22%2C%22premiumShortModelOnOffSwitch%22%3A%22on%22%7D',
-    'ms': '%7B%22lp%22%3Afalse%2C%22gms%22%3A%22Basic%22%7D',
-    # Probably google analytics
-    '_ga': 'GA1.2.1944158511.1644626857',
-    '_gid': 'GA1.2.141686656.1645132565',
-    # Probably ad tracking
-    # '__utmv': '39703653.|4=MemberID=392846=1',
-    # '__utma': '39703653.2142870450.1644300232.1645159306.1645221751.9',
-    # '__utmc': '39703653',
-    # '__utmt': '1',
-    # '__utmb': '39703653.2.9.1645221751',
-    # '__utmz': '=39703653.1644300232.1.1.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided)',
-
 }
 
 
@@ -104,7 +62,7 @@ def ms_epoch() -> int:
     return int(time.time() * 1000)
 
 
-SCRAPING_WF_TOKEN_RE = re.compile("var token = '(?P<wf_token>.+)'")
+# SCRAPING_WF_TOKEN_RE = re.compile("var token = '(?P<wf_token>.+)'")
 
 
 def parse_json_from_jquery_callback(jquery_callback: str, content: str) -> dict:
@@ -112,74 +70,86 @@ def parse_json_from_jquery_callback(jquery_callback: str, content: str) -> dict:
     return json.loads(content[start:-1])
 
 
+def make_logged_in_ikitesurf_session(username: str, password: str) -> requests.Session:
+    sesh = requests.Session()
+
+    resp = sesh.get(
+        "https://secure.ikitesurf.com/",
+        headers=HTML_HEADERS
+    )
+
+    resp = sesh.post(
+        'https://secure.ikitesurf.com',
+        params={
+            'app': 'wx',
+            'rd': f'spot/{DEFAULT_SPOT_ID}'
+        },
+        data={
+            'isun': username,
+            'ispw': password,
+            'iwok.x': 'Sign In',
+            'app': 'wx',
+            'rd': f'spot/{DEFAULT_SPOT_ID}'
+        },
+        headers=LOGIN_HEADERS,
+        allow_redirects=False
+    )
+    resp.raise_for_status()
+    return sesh
+
+
+def make_anonymous_ikitesurf_session() -> requests.Session:
+    sesh = requests.Session()
+
+    resp = sesh.get(
+        "https://wx.ikitesurf.com/",
+        headers=HTML_HEADERS
+    )
+    resp.raise_for_status()
+    return sesh
+
+
+def get_wf_token(sesh: requests.Session) -> str:
+    return sesh.cookies['wfToken']
+
+
+class WeatherflowApiFailure(Exception):
+    pass
+
+
+def raise_for_wfapi_status(resp: requests.Response):
+    if resp.json()["status"]["status_code"] != 0:
+        raise WeatherflowApiFailure(resp.json()["status"]["status_message"])
+
+
 @dataclass
 class WeatherflowApi:
     username: Optional[str] = None
     password: Optional[str] = None
+    wf_token: Optional[str] = None
+    expect_upgraded: bool = False  # If True, then this login should have upgraded data
 
     units_wind: str = 'kts'
     units_temp: str = 'f'
     units_distance: str = 'mi'
 
     def __post_init__(self):
+        if not self.wf_token:
+            self.refresh_wf_token()
+
+    def refresh_wf_token(self):
         if self.username and self.password:
             print(
                 f"Logging in to Weatherflow API with username {self.username}",  file=sys.stderr)
-            self.login(self.username, self.password)
-            # self.refresh_wf_token()
+            self.wf_token = get_wf_token(
+                make_logged_in_ikitesurf_session(self.username, self.password))
 
         else:
-            print(f"No login credentials found for Weatherflow API", file=sys.stderr)
+            print(f"No login credentials found for Weatherflow API--using anonymous session",
+                  file=sys.stderr)
             self.sesh = requests.Session()
-            self.refresh_wf_token()
-
-        # self.sesh = requests.Session()
-        # self.wf_token = 'cbfe54d6a4ae192b8926ecd44b70f3c5'
-
-    def login(self, username, password):
-        sesh = requests.Session()
-
-        resp = sesh.get(
-            "https://secure.ikitesurf.com/",
-            headers=HTML_HEADERS
-        )
-
-        resp = sesh.post(
-            'https://secure.ikitesurf.com',
-            params={
-                'app': 'wx',
-                'rd': f'spot/{DEFAULT_SPOT_ID}'
-            },
-            data={
-                'isun': username,
-                'ispw': password,
-                'iwok.x': 'Sign In',
-                'app': 'wx',
-                'rd': f'spot/{DEFAULT_SPOT_ID}'
-            },
-            headers=LOGIN_HEADERS,
-            allow_redirects=False
-        )
-        resp.raise_for_status()
-
-        self.wf_token = sesh.cookies['wfToken']  # TODO: Do I need this??
-        self.sesh = sesh
-
-    def fetch_wf_token(self, spot_id: Optional[str] = DEFAULT_SPOT_ID) -> str:
-
-        resp = self.sesh.get(f'https://wx.ikitesurf.com/spot/{spot_id}',
-                             headers=HTML_HEADERS
-                             )
-        resp.raise_for_status()
-
-        for line in resp.iter_lines(decode_unicode=True):
-            if match := re.search(SCRAPING_WF_TOKEN_RE, line):
-                return match.group("wf_token")
-
-        raise RuntimeError("Could not find wf_token in page")
-
-    def refresh_wf_token(self, spot_id: Optional[str] = DEFAULT_SPOT_ID):
-        self.wf_token = self.fetch_wf_token()
+            self.wf_token = get_wf_token(
+                make_anonymous_ikitesurf_session())
 
     def fetch_graph_summary(self, spot_id: str) -> dict:
         # cbtext = 'jQuery17209069701420982021_1644300565073'
@@ -199,38 +169,41 @@ class WeatherflowApi:
                 'type': ['dataonly'],
                 'model_ids': ['-101'],
                 'spot_id': [spot_id],
-                'wf_token': [self.wf_token],
+                'wf_token': [self.wf_token or ""],
                 '_': [str(ms_epoch())]  # Cachebreak ?
             },
-            # headers=API_HEADERS
         )
         resp.raise_for_status()
+        raise_for_wfapi_status(resp)
+        if self.expect_upgraded and resp.json()["upgrade_available"]:
+            raise WeatherflowApiFailure("Received non-upgraded response")
         return resp.json()
 
     def fetch_model(self, spot_id: str, model_id: str) -> dict:
-        resp = self.sesh.get(
+        resp = requests.get(
             'https://api.weatherflow.com/wxengine/rest/model/getModelDataBySpot',
             params={
-                # 'callback': ['jQuery17209069701420982021_1644300565073'],
                 'units_wind': [self.units_wind],
                 'units_temp': [self.units_temp],
                 'units_distance': [self.units_distance],
-                'model_id': ['-1'],
+                'model_id': [model_id],
                 'spot_id': [spot_id],
-                'wf_token': [self.wf_token],
+                'wf_token': [self.wf_token or ""],
                 '_': [ms_epoch()]  # Cachebreak ?
             },
-            # headers=API_HEADERS
         )
 
         resp.raise_for_status()
+        raise_for_wfapi_status(resp)
+        if self.expect_upgraded and resp.json()["is_upgrade_available"]:
+            raise WeatherflowApiFailure("Received non-upgraded response")
         return resp.json()
 
     def fetch_gauge_img(self, wind_speed: int, wind_dir: int, wind_dir_txt: str) -> BytesIO:
-        resp = self.sesh.get(
+        resp = requests.get(
             'https://api.weatherflow.com/wxengine/rest/graph/getGauge',
             params={
-                'wf_token': [self.wf_token],
+                'wf_token': [self.wf_token or ""],
                 'units_wind': [self.units_wind],
                 'units_temp': [self.units_temp],
                 'units_distance': [self.units_distance],
@@ -240,15 +213,54 @@ class WeatherflowApi:
                 'height': ['180'],
                 'image_format': ['png'],
                 'width': ['180'],
-                'wind_dir': [wind_dir],  # '68'
-                'wind_dir_txt': [wind_dir_txt],  # 'ENE',
+                'wind_dir': [wind_dir],  # e.g., '68'
+                'wind_dir_txt': [wind_dir_txt],  # e.g., 'ENE',
                 'message_code': ['1'],
                 'wind_speed': [wind_speed],
                 '_': [ms_epoch()]
             },
-            # headers=API_HEADERS
         )
         resp.raise_for_status()
         buf = BytesIO(resp.content)
         buf.seek(0)
+        # Note: this api call is missing validation that it was a successful response!
         return buf
+
+
+class WeatherflowApiWithWfTokenCache(WeatherflowApi):
+    cache_file_path: str = '/tmp/wftokencache.txt'
+
+    def __init__(self, *args, **kwargs):
+
+        if kwargs.get("cache_file_path"):
+            self.cache_file_path = kwargs.pop("cache_file_path")
+
+        try:
+            with open(self.cache_file_path, 'r') as fp:
+                kwargs["wf_token"] = fp.read().strip()
+                print(
+                    f"Using filesystem cached wftoken: {kwargs['wf_token']}",  file=sys.stderr)
+        except FileNotFoundError:
+            print(
+                f"No filesystem cached wftoken found",  file=sys.stderr)
+
+        super().__init__(*args, **kwargs)
+
+    def refresh_wf_token(self):
+        super().refresh_wf_token()
+        with open(self.cache_file_path, 'w') as fp:
+            fp.write(cast(str, self.wf_token))
+
+    def fetch_graph_summary(self, *args, **kwargs):
+        try:
+            return super().fetch_graph_summary(*args, **kwargs)
+        except WeatherflowApiFailure:
+            self.refresh_wf_token()
+            return super().fetch_graph_summary(*args, **kwargs)
+
+    def fetch_model(self, *args, **kwargs):
+        try:
+            return super().fetch_model(*args, **kwargs)
+        except WeatherflowApiFailure:
+            self.refresh_wf_token()
+            return super().fetch_model(*args, **kwargs)

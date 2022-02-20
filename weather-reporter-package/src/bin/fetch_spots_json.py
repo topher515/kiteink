@@ -9,7 +9,7 @@ import sys
 from base64 import b64encode
 from datetime import datetime
 
-from weather_reporter.weatherflow_api import MODEL_ID_BY_NAME, WeatherflowApi
+from weather_reporter.weatherflow_api import MODEL_ID_BY_NAME, WeatherflowApi, WeatherflowApiWithWfTokenCache
 
 
 def main():
@@ -28,8 +28,8 @@ def main():
 
     username = os.environ.get("WF_USERNAME", None)
     pw = os.environ.get("WF_PASSWORD", None)
-    wfapi = WeatherflowApi(username=username, password=pw)
-    # wf_token=WeatherflowApi.fetch_wf_token())
+    wfapi = WeatherflowApiWithWfTokenCache(
+        username=username, password=pw, expect_upgraded=bool(username and pw))
 
     def fetch_spot_data(spot_id: str):
         print(f"Fetching spot {spot_id}", file=sys.stderr)

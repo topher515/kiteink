@@ -248,7 +248,8 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
             filled = bar_datum["filled"]
             label = bar_datum["label"]
             value = bar_datum["value"]
-            bar_d = draw_red if bar_datum.get("red", red) else draw_blk
+            bar_red = bar_datum.get("red", red)
+            bar_d = draw_red if bar_red else draw_blk
             bar_d.rectangle((x, y - 5, x + width, y - (5 + value*pixels_per_unit)),
                             outline=BLACK_BIT, fill=BLACK_BIT if filled else WHITE_BIT, width=1)
 

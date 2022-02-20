@@ -1,13 +1,13 @@
 #! /usr/bin/env python3
 
-from dataclasses import dataclass
 import json
-import sys
+import logging
 import time
+from dataclasses import dataclass
 from io import BytesIO
 from typing import Optional, cast
-import requests
 
+import requests
 
 SAMPLE_BASE_URL = 'https://api.weatherflow.com/wxengine/rest/stat/getSpotStats?callback=jQuery17209069701420982021_1644300565073&units_wind=mph&units_temp=f&units_distance=mi&threshold_list=0%2C10%2C15%2C20%2C25&years_back=50&full_day=false&spot_id=187573&wf_token=e5615b765be6c96e23cc17cba3373778&_=1644300565399'
 
@@ -60,9 +60,6 @@ MODEL_ID_BY_NAME = {
 
 def ms_epoch() -> int:
     return int(time.time() * 1000)
-
-
-# SCRAPING_WF_TOKEN_RE = re.compile("var token = '(?P<wf_token>.+)'")
 
 
 def parse_json_from_jquery_callback(jquery_callback: str, content: str) -> dict:
@@ -139,14 +136,14 @@ class WeatherflowApi:
 
     def refresh_wf_token(self):
         if self.username and self.password:
-            print(
-                f"Logging in to Weatherflow API with username {self.username}",  file=sys.stderr)
+            logging.info(
+                f"Logging in to Weatherflow API with username {self.username}")
             self.wf_token = get_wf_token(
                 make_logged_in_ikitesurf_session(self.username, self.password))
 
         else:
-            print(f"No login credentials found for Weatherflow API--using anonymous session",
-                  file=sys.stderr)
+            logging.info(
+                f"No login credentials found for Weatherflow API--using anonymous session")
             self.sesh = requests.Session()
             self.wf_token = get_wf_token(
                 make_anonymous_ikitesurf_session())
@@ -238,11 +235,11 @@ class WeatherflowApiWithWfTokenCache(WeatherflowApi):
         try:
             with open(self.cache_file_path, 'r') as fp:
                 kwargs["wf_token"] = fp.read().strip()
-                print(
-                    f"Using filesystem cached wftoken: {kwargs['wf_token']}",  file=sys.stderr)
+                logging.info(
+                    f"Using filesystem cached wftoken: {kwargs['wf_token']}")
         except FileNotFoundError:
-            print(
-                f"No filesystem cached wftoken found",  file=sys.stderr)
+            logging.warning(
+                f"No filesystem cached wftoken found")
 
         super().__init__(*args, **kwargs)
 

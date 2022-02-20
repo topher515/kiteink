@@ -1,17 +1,14 @@
-from numbers import Number
 import os
-import shutil
 import statistics
-from tempfile import NamedTemporaryFile
-import textwrap
 from base64 import b64decode
 from datetime import datetime, timedelta, tzinfo
-from email.headerregistry import Group
 from io import BytesIO
 from itertools import chain, groupby
+from numbers import Number
 from pathlib import Path
-from time import timezone
-from typing import Callable, Dict, Iterable, Optional, Sequence, Tuple, TypedDict, Union, cast
+from tempfile import NamedTemporaryFile
+from typing import (Callable, Iterable, Optional, Sequence, Tuple,
+                    TypedDict, Union, cast)
 
 import dateutil.parser
 import pytz

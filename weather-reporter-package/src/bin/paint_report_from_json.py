@@ -1,14 +1,16 @@
 
 #!/usr/bin/env python3
+import argparse
 import collections.abc
 import json
-import sys
-import argparse
 import logging
+import sys
 
-from weather_reporter.painter import composite_red_blk_imgs, paint_blk_and_red_imgs
+from weather_reporter.painter import (composite_red_blk_imgs,
+                                      paint_blk_and_red_imgs)
 
-# logging.basicConfig(level=logging.DEBUG)
+
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 try:
     from weather_reporter.epaper_display import epd_display_images
@@ -68,13 +70,16 @@ def main():
             raise argparse.ArgumentError(
                 ep_action, "Failed to import epaper module--cannot output to epaper")
 
+        logging.info("Painting to epaper display")
         epd_display_images(blk_img, red_img)
 
     if args.show:
+        logging.info("Painting and displaying temporary file")
         img = composite_red_blk_imgs(blk_img, red_img)
         img.show()
 
     if args.outfile:
+        logging.info("Painting and saving file")
         img = composite_red_blk_imgs(blk_img, red_img)
 
         fp = args.outfile if args.outfile else open(

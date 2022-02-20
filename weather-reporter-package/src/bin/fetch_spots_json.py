@@ -3,13 +3,15 @@
 import argparse
 import concurrent.futures
 import json
+import logging
 import os
-import re
 import sys
 from base64 import b64encode
-from datetime import datetime
 
-from weather_reporter.weatherflow_api import MODEL_ID_BY_NAME, WeatherflowApi, WeatherflowApiWithWfTokenCache
+from weather_reporter.weatherflow_api import (MODEL_ID_BY_NAME,
+                                              WeatherflowApiWithWfTokenCache)
+
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 
 def main():
@@ -32,9 +34,8 @@ def main():
         username=username, password=pw, expect_upgraded=bool(username and pw))
 
     def fetch_spot_data(spot_id: str):
-        print(f"Fetching spot {spot_id}", file=sys.stderr)
+        logging.info(f"Fetching spot {spot_id}")
         graph_summary_data = wfapi.fetch_graph_summary(spot_id)
-        # graph_summary_data = normalize_graph_summary_data(graph_summary_data)
         model_data = wfapi.fetch_model(spot_id, model_id)
 
         gauge_img = wfapi.fetch_gauge_img(

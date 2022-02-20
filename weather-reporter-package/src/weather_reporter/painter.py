@@ -1,3 +1,4 @@
+from numbers import Number
 import os
 import shutil
 import statistics
@@ -10,7 +11,7 @@ from io import BytesIO
 from itertools import chain, groupby
 from pathlib import Path
 from time import timezone
-from typing import Callable, Dict, Sequence, Tuple, Union
+from typing import Callable, Dict, Iterable, Optional, Sequence, Tuple, TypedDict, Union, cast
 
 import dateutil.parser
 import pytz
@@ -30,6 +31,13 @@ BLACK_BIT = 0
 TZ = pytz.timezone("Pacific/Honolulu")
 
 CONSIDERED_OLD = timedelta(hours=1)
+
+THRESHOLD_SPEED_KNOTS = 15
+THRESHOLD_SPEEDS = {
+    'kts': THRESHOLD_SPEED_KNOTS,
+    'mph': 1.15078 * THRESHOLD_SPEED_KNOTS,
+    'kph': 1.852 * THRESHOLD_SPEED_KNOTS,
+}
 
 
 def get_spot_website_url(spot_id: int):
@@ -194,7 +202,11 @@ def calc_next_60_3hr_wind_mean(now_dt: datetime, model_data: dict, tz: tzinfo):
     return next_60_time_blocks
 
 
-BarChartDatum = Tuple[Union[str, int], float, bool]
+class BarChartDatum(TypedDict):
+    value: int
+    label: Union[str, Number]
+    filled: Optional[bool]
+    red: Optional[bool]
 
 
 def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Image.Image]:
@@ -220,7 +232,7 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
         d = draw_red if red else draw_blk
         d.text(coords, text, font=fnt, fill=BLACK_BIT, )
 
-    def write_bar_chart(coords: Tuple[int, int], hourlies: Sequence[BarChartDatum], width: int = 2, red=False, pixels_per_unit=4, x_axis_skip=2):
+    def write_bar_chart(coords: Tuple[int, int], bars: Iterable[BarChartDatum], width: int = 2, red=False, pixels_per_unit=4, x_axis_skip=2):
         d = draw_red if red else draw_blk
 
         x_start, y_start = coords
@@ -232,9 +244,13 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
 
         x = x_start + 10
         y = y_start
-        for i, (label, value, filled) in enumerate(hourlies):
-            d.rectangle((x, y - 5, x + width, y - (5 + value*pixels_per_unit)),
-                        outline=BLACK_BIT, fill=BLACK_BIT if filled else WHITE_BIT, width=1)
+        for i, bar_datum in enumerate(bars):
+            filled = bar_datum["filled"]
+            label = bar_datum["label"]
+            value = bar_datum["value"]
+            bar_d = draw_red if bar_datum.get("red", red) else draw_blk
+            bar_d.rectangle((x, y - 5, x + width, y - (5 + value*pixels_per_unit)),
+                            outline=BLACK_BIT, fill=BLACK_BIT if filled else WHITE_BIT, width=1)
 
             if i % x_axis_skip == 0:
                 # Print every other hour
@@ -260,23 +276,28 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
 
         os.remove(fp_w.name)
 
-    def paint_header_col(x_start: int):
+    def paint_header_col(x_start: int, graph_summary_data: dict):
 
-        write_text((x_start, 70), fnt_40, "Now", red=True)
+        units_wind = graph_summary_data["units_wind"]
+        threshold_value = THRESHOLD_SPEEDS[units_wind]
+
+        write_text((x_start, 70), fnt_40, "Now")
         write_text((x_start, 110), fnt_20,
-                   now_local.strftime("%H:%M %Z"), red=True)
+                   now_local.strftime("%H:%M %Z"))
         write_text((x_start, 190), fnt_40, "Today")
         write_text((x_start, 230), fnt_20, now_local.strftime("%b %d"))
         write_text((x_start, 350), fnt_40, "7 Day")
 
+        write_text((x_start, 450), fnt_sm,
+                   f"Threshold: {threshold_value} {units_wind}")
+
     def paint_spot_col(x_start: int, graph_summary_data: dict, gauge_img_data: Union[str, bytes], model_data: dict):
+
+        units_wind = model_data["units_wind"]
+        threshold_value = THRESHOLD_SPEEDS[units_wind]
 
         # Write Spot title
         spot_name = graph_summary_data["name"][:8]
-        # offset = 10
-        # for line in textwrap.wrap(spot_name, width=10):
-        #     write_text((x_start, offset), fnt_30, line)
-        #     offset += fnt_30.getsize(line)[1]
         write_text((x_start, 10), fnt_30, spot_name)
 
         # Write Last updated
@@ -284,8 +305,6 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
             graph_summary_data["current_time_local"])
         last_fetch = last_fetch.replace(
             tzinfo=pytz.timezone(graph_summary_data["local_timezone"]))
-        # last_fetch = datetime.fromtimestamp(
-        #     graph_summary_data["current_time_epoch_utc"]/1000).replace(tzinfo=pytz.UTC)
         last_fetch_local = last_fetch.astimezone(TZ)
 
         if now_local - last_fetch_local > CONSIDERED_OLD:
@@ -297,8 +316,11 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
                        last_fetch_local.strftime("last: %b %d, %H:%M %Z"))
 
         # Write Gauge
+        cur_speed = graph_summary_data["last_ob_avg"]
+        red = cur_speed > threshold_value
+        base_img = base_red if red else base_blk
         gauge_img = Image.open(BytesIO(b64decode(gauge_img_data))).convert("1")
-        base_blk.paste(gauge_img.crop((20, 20, 160, 160)
+        base_img.paste(gauge_img.crop((20, 20, 160, 160)
                                       ).resize((100, 100)), (x_start, 70))
 
         # Write qrcode
@@ -314,11 +336,14 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
         )]
         hourlies_future = calc_next_12_hours_wind_mean(
             now_local, model_data, TZ)
-        hourlies = list(chain(
-            ((hour, val, True) for hour, val in hourlies_past),
-            ((hour, val, True) for hour, val in hourlies_now),
-            ((hour, val, False) for hour, val in hourlies_future)
-        ))
+        hourlies = [cast(BarChartDatum, x) for x in chain(
+            ({'label': hour, 'value': val, 'filled': True, "red": val >= threshold_value}
+             for hour, val in hourlies_past),
+            ({'label': hour, 'value': val, 'filled': True, "red": val >= threshold_value}
+             for hour, val in hourlies_now),
+            ({'label': hour, 'value': val, 'filled': False, "red": val >= threshold_value}
+             for hour, val in hourlies_future)
+        )]
         write_bar_chart((x_start, 300), hourlies, width=10)
 
         # Write this week bar chart
@@ -328,20 +353,21 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
         last_seen_label = None
         for label, val in _3hrsly_distant_future:
             if not last_seen_label:
-                _3hrlies.append(("", val, False))
+                _3hrlies.append({"label": "", "value": val,
+                                "filled": False, "red": val >= threshold_value})
                 last_seen_label = label
             elif last_seen_label != label:
                 # Every new day gets a filled bar
-                _3hrlies.append((label, val, True))
+                _3hrlies.append({"label": label, "value": val,
+                                "filled": True,  "red": val >= threshold_value})
                 last_seen_label = label
             else:
-                _3hrlies.append(("", val, False))
+                _3hrlies.append(
+                    {"label": "", "value": val, "filled": False,  "red": val >= threshold_value})
 
-        # import pdb
-        # pdb.set_trace()
         write_bar_chart((x_start, 450), _3hrlies, width=3, x_axis_skip=1)
 
-    paint_header_col(10)
+    paint_header_col(10, spots_data[0]["graph_summary"])
 
     spot_x = 150
     for spot_data in spots_data:

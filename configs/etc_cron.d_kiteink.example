@@ -1,0 +1,7 @@
+# Intended for pi user with HOME=/home/pi/app
+HOME=/home/pi/app
+PIPENV_VENV_IN_PROJECT=1 
+WF_USERNAME='foobar' 
+WF_PASSWORD='foobazpassword1'
+# At every 5th minute past every hour from 6 through 23.
+0,5,10,15,20,25,30,35,40,45,50,55 6-23 * * * scripts/scrape_limiter_entrypoint.py

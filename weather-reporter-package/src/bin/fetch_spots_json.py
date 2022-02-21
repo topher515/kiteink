@@ -1,5 +1,8 @@
 
 #!/usr/bin/env python3
+from weather_reporter.weatherflow_api import (MODEL_ID_BY_NAME,
+                                              WeatherflowApiWithWfTokenCache)
+from weather_reporter.log import setup_rotating_file_log
 import argparse
 import concurrent.futures
 import json
@@ -8,9 +11,6 @@ import os
 import sys
 from base64 import b64encode
 
-from weather_reporter.weatherflow_api import (MODEL_ID_BY_NAME,
-                                              WeatherflowApiWithWfTokenCache)
-
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 
@@ -18,12 +18,16 @@ def main():
 
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--log', action='store', type=str, default=None)
     parser.add_argument('--outfile',
                         type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('spotids', action='store', type=int, nargs='+')
     parser.add_argument('--threaded', action='store_true', default=False)
 
     args = parser.parse_args()
+
+    if args.log:
+        setup_rotating_file_log(args.log)
 
     spot_name = 'Lanikai Beach'
     model_id = MODEL_ID_BY_NAME['Quicklook']

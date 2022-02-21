@@ -8,6 +8,7 @@ import sys
 
 from weather_reporter.painter import (composite_red_blk_imgs,
                                       paint_blk_and_red_imgs)
+from weather_reporter.log import setup_rotating_file_log
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
@@ -42,6 +43,8 @@ def normalize_spot_data(spot_data: dict) -> dict:
 def main():
 
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('--log', action='store', type=str, default=None)
     parser.add_argument('--infile', nargs='?',
                         type=argparse.FileType('r'), default=sys.stdin)
 
@@ -53,6 +56,9 @@ def main():
     group.add_argument(
         '--show', action='store_true', default=False)
     args = parser.parse_args()
+
+    if args.log:
+        setup_rotating_file_log(args.log)
 
     spots_data = json.load(args.infile)
 

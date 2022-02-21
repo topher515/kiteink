@@ -25,3 +25,4 @@ run afoul of the Weatherflow lawyers.)
 
 - Copy and fill in your own values for `configs/etc_cron.d_kiteink.example` -> `configs/etc_cron.d_kiteink`
 - Deploy to RaspberryPi: `bash deploy/deploy.sh`
+- Start the cronjob `bash deploy/restart-cron.sh`

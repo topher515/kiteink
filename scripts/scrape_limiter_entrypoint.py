@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
+import os
+import shutil
 import subprocess
 import sys
 import time
@@ -13,6 +15,7 @@ PROBABILITY_X = 3  # 1 in X
 DELAY_MAX_SECS = 120
 DELAY_MIN_SECS = 0
 SPOT_IDS = [429, 187573, 430]
+LOG_PATH = "/home/pi/logs/"
 
 
 def main():
@@ -33,8 +36,12 @@ def main():
         time.sleep(sleep_secs)
         logging.info("Beginning fetch + paint")
         spot_ids = ' '.join([str(x) for x in SPOT_IDS])
+        try:
+            os.mkdir(LOG_PATH)
+        except FileExistsError:
+            pass
         subprocess.call(
-            f'pipenv run fetch_spots_json.py --threaded {spot_ids} | pipenv run paint_report_from_json.py --epaper', shell=True
+            f'pipenv run fetch_spots_json.py --log={LOG_PATH}/fetch.log --threaded {spot_ids} | pipenv run paint_report_from_json.py --log={LOG_PATH}/paint.log --epaper', shell=True
         )
     else:
         logging.info("Randomly skipping fetch + paint")

@@ -1,10 +1,14 @@
+import os
 import logging
 from logging.handlers import RotatingFileHandler
 from typing import Optional
 
 
 def setup_rotating_file_log(log_filepath: str):
-
+    try:
+        os.mkdir(os.path.dirname(log_filepath))
+    except FileExistsError:
+        pass
     log_handler = RotatingFileHandler(log_filepath)
     formatter = logging.Formatter(
         '%(asctime)s kiteink [%(process)d]: %(message)s',

@@ -1,3 +1,14 @@
-export WF_USERNAME='foo...bar'
-export WF_PASSWORD='foo...baz'
+
+# Deploy config
 export RPI_IP="192.168.1.208"
+
+# App config
+# export PIPENV_VENV_IN_PROJECT=1
+
+# Chart fetching and rendering
+export WF_USERNAME='foobar'
+export WF_PASSWORD='foopass'
+export KITE_SPOT_IDS="111,222,333"
+export HIGHLIGHT_THRESHOLD_SPEED_KNOTS=15
+export CHART_SPEED_UNIT_MAX=25
+export UNIT_SPEED_PIXEL_HEIGHT=4

@@ -4,14 +4,18 @@ import argparse
 import collections.abc
 import json
 import logging
+import os
 import sys
 
+from weather_reporter.log import setup_rotating_file_log
 from weather_reporter.painter import (composite_red_blk_imgs,
                                       paint_blk_and_red_imgs)
-from weather_reporter.log import setup_rotating_file_log
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+
+
+LOG_FILE_PATH = os.environ.get("KITE_LOG_FILE_PATH")
+
 
 try:
     from weather_reporter.epaper_display import epd_display_images
@@ -44,7 +48,6 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--log', action='store', type=str, default=None)
     parser.add_argument('--infile', nargs='?',
                         type=argparse.FileType('r'), default=sys.stdin)
 
@@ -57,8 +60,8 @@ def main():
         '--show', action='store_true', default=False)
     args = parser.parse_args()
 
-    if args.log:
-        setup_rotating_file_log(args.log)
+    if LOG_FILE_PATH:
+        setup_rotating_file_log(LOG_FILE_PATH)
 
     spots_data = json.load(args.infile)
 

@@ -1,7 +1,14 @@
-# Intended for pi user with HOME=/home/pi/app
+# App setup
 HOME=/home/pi/app
 PIPENV_VENV_IN_PROJECT=1 
+KITE_LOG_FILE_PATH=/home/pi/logs/kiteink.log
+KITE_EXEC_PROBABILITY='1/4'
+# Chart fetching and rendering
 WF_USERNAME='foobar' 
 WF_PASSWORD='foobazpassword1'
+KITE_SPOT_IDS="429,187573,430"
+HIGHLIGHT_THRESHOLD_SPEED_KNOTS=15
+CHART_SPEED_UNIT_MAX=25
+UNIT_SPEED_PIXEL_HEIGHT=4
 # At every 5th minute past every hour from 6 through 23.
-0,5,10,15,20,25,30,35,40,45,50,55 6-23 * * * scripts/scrape_limiter_entrypoint.py
+*/5 6-22 * * * scripts/scrape_limiter_entrypoint.py

@@ -7,8 +7,8 @@ from itertools import chain, groupby
 from numbers import Number
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import (Callable, Iterable, Optional, Sequence, Tuple,
-                    TypedDict, Union, cast)
+from typing import (Callable, Iterable, Optional, Sequence, Tuple, TypedDict,
+                    Union, cast)
 
 import dateutil.parser
 import pytz
@@ -18,7 +18,6 @@ from PIL import Image, ImageDraw, ImageFont
 # More fonts https://www.dafont.com/bitmap.php
 # https://lucid.app/lucidchart/6a918925-6ff7-4aff-91ce-f57223f1599a/edit?beaconFlowId=B86FF4B9E5FF811D&invitationId=inv_afc6c6ae-b5ad-4c89-bf62-57c523d488b7&page=0_0#
 
-# RGBA_WHITE = (255, 255, 255, 255)
 
 DIMENSIONS = (800, 480)
 
@@ -29,12 +28,16 @@ TZ = pytz.timezone("Pacific/Honolulu")
 
 CONSIDERED_OLD = timedelta(hours=1)
 
-THRESHOLD_SPEED_KNOTS = 15
+THRESHOLD_SPEED_KNOTS = float(os.environ.get(
+    "HIGHLIGHT_THRESHOLD_SPEED_KNOTS", 15))
 THRESHOLD_SPEEDS = {
     'kts': THRESHOLD_SPEED_KNOTS,
     'mph': 1.15078 * THRESHOLD_SPEED_KNOTS,
     'kph': 1.852 * THRESHOLD_SPEED_KNOTS,
 }
+
+CHART_SPEED_UNIT_MAX = int(os.environ.get("CHART_SPEED_UNIT_MAX", 25))
+UNIT_SPEED_PIXEL_HEIGHT = float(os.environ.get("UNIT_SPEED_PIXEL_HEIGHT", 4))
 
 
 def get_spot_website_url(spot_id: int):
@@ -229,12 +232,12 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
         d = draw_red if red else draw_blk
         d.text(coords, text, font=fnt, fill=BLACK_BIT, )
 
-    def write_bar_chart(coords: Tuple[int, int], bars: Iterable[BarChartDatum], width: int = 2, red=False, pixels_per_unit=4, x_axis_skip=2):
+    def write_bar_chart(coords: Tuple[int, int], bars: Iterable[BarChartDatum], width: int = 2, red=False, pixels_per_unit=UNIT_SPEED_PIXEL_HEIGHT, x_axis_skip=2):
         d = draw_red if red else draw_blk
 
         x_start, y_start = coords
 
-        for j in range(25):
+        for j in range(CHART_SPEED_UNIT_MAX):
             if j % 4 == 0:
                 write_text((x_start, y_start - (10 + j*pixels_per_unit)),
                            fnt_sm, str(j), red=red)

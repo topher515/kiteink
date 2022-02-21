@@ -3,20 +3,33 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-import shutil
+from pprint import pformat
 import subprocess
 import sys
 import time
-from random import randint
+from random import randint, random as randfloat
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
-# Designed for a crontab like: 0,5,10,15,20,25,30,35,40,45,50,55 * * * *
-PROBABILITY_X = 3  # 1 in X
-DELAY_MAX_SECS = 120
-DELAY_MIN_SECS = 0
-SPOT_IDS = [429, 187573, 430]
-LOG_PATH = "/home/pi/logs/"
+
+def parse_probability(strn: str) -> float:
+    splat = strn.split('/')
+    if len(splat) == 2:
+        numer, denom = splat
+        return float(numer) / float(denom)
+    elif len(splat) == 1:
+        return float(splat[0])
+    raise ValueError(f"Cannot parse probabilty str of '{strn}'")
+
+
+# Designed for a crontab like: */5 6-22 * * * * * *
+EXEC_PROBABILITY = parse_probability(
+    os.environ.get("KITE_EXEC_PROBABILITY", "1/4"))
+EXEC_DELAY_MIN_SECS = int(os.environ.get("KITE_EXEC_DELAY_MIN_SECS", 0))
+EXEC_DELAY_MAX_SECS = int(os.environ.get("KITE_EXEC_DELAY_MAX_SECS", 120))
+SPOT_IDS = [int(x.strip())
+            for x in os.environ.get("KITE_SPOT_IDS", "").split(",") if x]
+LOG_FILE_PATH = os.environ.get("KITE_LOG_FILE_PATH")
 
 
 def setup_rotating_file_log(log_filepath: str):
@@ -47,20 +60,26 @@ def main():
     [1] https://help.weatherflow.com/hc/en-us/articles/206504298-Terms-of-Use
     '''
 
-    setup_rotating_file_log(LOG_PATH + "/kiteink.log")
+    if LOG_FILE_PATH:
+        setup_rotating_file_log(LOG_FILE_PATH)
 
-    if randint(0, PROBABILITY_X) == 0:
+    if not SPOT_IDS:
+        logging.error("No SPOT_IDS specified")
+        sys.exit(1)
 
-        sleep_secs = randint(DELAY_MIN_SECS, DELAY_MAX_SECS)
+    if EXEC_PROBABILITY < randfloat():
+
+        sleep_secs = randint(EXEC_DELAY_MIN_SECS, EXEC_DELAY_MAX_SECS)
         logging.info(f"Will fetch + paint--delaying for {sleep_secs} secs")
         time.sleep(sleep_secs)
         logging.info("Beginning fetch + paint")
         spot_ids = ' '.join([str(x) for x in SPOT_IDS])
         subprocess.call(
-            f'pipenv run fetch_spots_json.py --log={LOG_PATH}/kiteink.log --threaded {spot_ids} | pipenv run paint_report_from_json.py --log={LOG_PATH}/kiteink.log --epaper', shell=True
+            f'pipenv run fetch_spots_json.py --threaded {spot_ids} | pipenv run paint_report_from_json.py --epaper', shell=True
         )
     else:
-        logging.info("Randomly skipping fetch + paint")
+        logging.info(
+            f"Randomly skipping fetch + paint--{1-EXEC_PROBABILITY} probabilty to skip")
 
 
 if __name__ == '__main__':

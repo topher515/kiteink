@@ -9,8 +9,6 @@ from typing import Optional, cast
 
 import requests
 
-SAMPLE_BASE_URL = 'https://api.weatherflow.com/wxengine/rest/stat/getSpotStats?callback=jQuery17209069701420982021_1644300565073&units_wind=mph&units_temp=f&units_distance=mi&threshold_list=0%2C10%2C15%2C20%2C25&years_back=50&full_day=false&spot_id=187573&wf_token=e5615b765be6c96e23cc17cba3373778&_=1644300565399'
-
 DEFAULT_SPOT_ID = '187573'
 
 BASE_HEADERS = {
@@ -37,7 +35,6 @@ HTML_HEADERS = {
 
 LOGIN_HEADERS = {
     **BASE_HEADERS,
-    # 'origin: https://secure.ikitesurf.com'
     'authority': 'secure.ikitesurf.com',
     'content-type': 'application/x-www-form-urlencoded',
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -45,12 +42,7 @@ LOGIN_HEADERS = {
     'sec-fetch-mode': 'navigate',
     'sec-fetch-user': '?1',
     'sec-fetch-dest': 'document',
-    'referer': f'https://secure.ikitesurf.com/?app=wx&rd=spot/{DEFAULT_SPOT_ID}'
-}
-
-
-SPOT_ID_BY_NAME = {
-    'Lanikai Beach': '187573'
+    'referer': f'https://secure.ikitesurf.com/'
 }
 
 MODEL_ID_BY_NAME = {
@@ -149,11 +141,9 @@ class WeatherflowApi:
                 make_anonymous_ikitesurf_session())
 
     def fetch_graph_summary(self, spot_id: str) -> dict:
-        # cbtext = 'jQuery17209069701420982021_1644300565073'
         resp = requests.get(
             'https://api.weatherflow.com/wxengine/rest/graph/getGraph',
             params={
-                # 'callback': [cbtext],
                 'units_wind': [self.units_wind],
                 'units_temp': [self.units_temp],
                 'units_distance': [self.units_distance],

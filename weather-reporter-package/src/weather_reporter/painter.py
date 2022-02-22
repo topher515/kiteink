@@ -318,7 +318,7 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
 
         # Write Gauge
         cur_speed = graph_summary_data["last_ob_avg"]
-        red = cur_speed > threshold_value
+        red = cur_speed >= threshold_value
         base_img = base_red if red else base_blk
         gauge_img = Image.open(BytesIO(b64decode(gauge_img_data))).convert("1")
         base_img.paste(gauge_img.crop((20, 20, 160, 160)

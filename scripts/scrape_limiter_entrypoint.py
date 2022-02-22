@@ -67,7 +67,7 @@ def main():
         logging.error("No SPOT_IDS specified")
         sys.exit(1)
 
-    if EXEC_PROBABILITY < randfloat():
+    if EXEC_PROBABILITY > randfloat():
 
         sleep_secs = randint(EXEC_DELAY_MIN_SECS, EXEC_DELAY_MAX_SECS)
         logging.info(f"Will fetch + paint--delaying for {sleep_secs} secs")

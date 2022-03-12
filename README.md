@@ -14,8 +14,8 @@ Also, ePaper displays look sweet.
 Wind data is fetched from Weatherflow API.
 
 It seems like using the API for personal use is ok based on [Weatherflow Terms Of Use][1],
-as long as you don't sell this data or display it publicly—but IANAL so maybe you could
-run afoul of the Weatherflow lawyers by doing this.
+as long as you don't sell the data or display it publicly—but IANAL so maybe you could
+run afoul of the Weatherflow lawyers just using this system.
 
 [1]: https://help.weatherflow.com/hc/en-us/articles/206504298-Terms-of-Use
 
@@ -44,21 +44,32 @@ You may need to modify code for other hardware.
 The software is two python scripts which fetch data from Weatherflow, and paint
 the fetched data to the ePaper screen.
 
-The scripts are run via a cronjob with a bit of random
+The scripts are run via a cronjob with a bit of random.
 
-### Setup for development
-
-- Clone repo
-- Copy and fill in your own values for `.envrc.example` -> `.envrc`
-  - `export RPI_IP="192.168.1.208"` should be the IP address of your RaspberryPi
-- Install **direnv**. e.g., `brew install direnv` (https://direnv.net/docs/installation.html)
+Once set up you should be able to unplug your 
 
 ### Deploy on Raspberry PI
 
-- Copy and fill in your own values for `configs/etc_cron.d_kiteink.example` -> `configs/etc_cron.d_kiteink`
-- Deploy to RaspberryPi: `bash deploy/deploy.sh`
-- Enable SPI via the config interface. 
-  - Connect `ssh pi@$RPI_IP`
-  - Start configuration interface `sudo raspi-config`
-- Start the cronjob `bash deploy/restart-cron.sh`
+- Setup your local machine
+  - Clone this repo
+  - Copy and fill in your own values for `.envrc.example` -> `.envrc`
+    - `export RPI_IP="192.168.1.208"` should be the IP address of your Raspberry Pi
+  - Install **direnv**. e.g., `brew install direnv` (https://direnv.net/docs/installation.html)
+- Setup Raspberry Pi
+  - You must have already set up your Raspberry Pi to connect to your wifi
+    - Use [the Raspberry Pi imager](https://www.raspberrypi.com/software/) to install an image which knows your wifi password 
+  - Enable SPI via the config interface. 
+    - Connect `ssh pi@$RPI_IP`
+    - Start configuration interface `sudo raspi-config`
+  - Copy and fill in your own values for `configs/etc_cron.d_kiteink.example` -> `configs/etc_cron.d_kiteink`
+    - Leave `WF_USERNAME`, `WF_PASSWORD` if you dont have a iKitesurf account to login to
+    - `KITE_SPOT_IDS` should be a comma-separated list of Kite Spot Ids
+    - You can find a kitespot ID in the URL of an ikitesurf location—like: Cabarete: https://wx.ikitesurf.com/spot/182265
+  - Deploy to Raspberry Pi: `deploy/setup-rpi.sh`
+    - This will do basic setup of the Raspberry Pi—you need to know your `pi` username's password to do this
+  - Deploy to Raspberry Pi: `deploy/deploy.sh`
+    - This will copy the relevant files from your machine to the Raspberry Pi
+  - Start the cronjob `deploy/restart-cron.sh`
+
+You can turn off the cronjob by updating the crontab manually of running `deploy/halt-cron.sh`
 

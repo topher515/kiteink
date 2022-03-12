@@ -44,9 +44,11 @@ You may need to modify code for other hardware.
 The software is two python scripts which fetch data from Weatherflow, and paint
 the fetched data to the ePaper screen.
 
-The scripts are run via a cronjob with a bit of random.
+The scripts are run via a cronjob with a bit of randomness built in—so they run
+~20 times a day.
 
-Once set up you should be able to unplug your 
+Once setup you should be able to power cycle the Raspberry Pi and it will "just work"
+when it comes back.
 
 ### Deploy on Raspberry PI
 
@@ -71,5 +73,5 @@ Once set up you should be able to unplug your
     - This will copy the relevant files from your machine to the Raspberry Pi
   - Start the cronjob `deploy/restart-cron.sh`
 
-You can turn off the cronjob by updating the crontab manually of running `deploy/halt-cron.sh`
+You can turn off the cronjob by updating the crontab manually or running `deploy/halt-cron.sh`
 

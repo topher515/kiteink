@@ -31,8 +31,8 @@ The specific hardware used was:
 - [Waveshare 7.5 inch red+black display with ePaper Driver HAT (for GPIO)][2]
 - A cool [flat USB-A charger][3]
 - Simple [wood and acrylic picture frame][4]—this pretty nicely shows off the thinness of the screen.
-- [3D Printed Raspberry Pi Zero case][5]
-  - Direct download [the STL files model file]
+- 3D Printed Raspberry Pi Zero case
+  - Direct download [the STL files model file][5]
   - Access the "thing" in [TinkerCad][6]
 
 You may need to modify code for other hardware.

@@ -22,8 +22,8 @@ run afoul of the Weatherflow lawyers just using this system.
 
 ## Hardware
 
-<img src="imgs/front-v1.jpg" width=300 /> 
-<img src="imgs/side-v1.jpg" width=300 /> 
+<img src="assets/front-v1.jpg" width=300 /> 
+<img src="assets/side-v1.jpg" width=300 /> 
 
 The specific hardware used was:
 
@@ -31,13 +31,17 @@ The specific hardware used was:
 - [Waveshare 7.5 inch red+black display with ePaper Driver HAT (for GPIO)][2]
 - A cool [flat USB-A charger][3]
 - Simple [wood and acrylic picture frame][4]—this pretty nicely shows off the thinness of the screen.
-- 3D Printed Raspberry Pi Zero case. (TBD)
+- [3D Printed Raspberry Pi Zero case][5]
+  - Direct download [the STL files model file]
+  - Access the "thing" in [TinkerCad][6]
 
 You may need to modify code for other hardware.
 
 [2]: https://www.amazon.com/gp/product/B075YP81JR
 [3]: https://www.amazon.com/dp/product/B07MNR1TKD
 [4]: https://www.amazon.com/gp/product/B086Y8F55B
+[5]: assets/ePaper_Hat_v1.0.stl
+[6]: https://www.tinkercad.com/things/cVSj39HFrdb
 
 ## Software
 

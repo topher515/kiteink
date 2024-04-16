@@ -8,6 +8,7 @@ export RPI_IP="192.168.1.208"
 # Chart fetching and rendering
 export WF_USERNAME='foobar'
 export WF_PASSWORD='foopass'
+export WF_MODEL_NAME="IK_WRF"
 export KITE_SPOT_IDS="111,222,333"
 export HIGHLIGHT_THRESHOLD_SPEED_KNOTS=15
 export CHART_SPEED_UNIT_MAX=25

@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+from enum import Enum
 import json
 import logging
 import time
@@ -45,9 +46,14 @@ LOGIN_HEADERS = {
     'referer': f'https://secure.ikitesurf.com/'
 }
 
-MODEL_ID_BY_NAME = {
-    'Quicklook': '-1'
-}
+
+class WeatherFlowModel(Enum):
+    quicklook = '-1'
+    # iK-WRF SF Bay iKitesurf Weather & Research Forecast Model 1km
+    ik_wrf = '211'
+    # iK-TRRM Tempest Real-time Refresh Model-Station
+    ik_trrm = '-7'
+
 
 
 def ms_epoch() -> int:
@@ -166,14 +172,14 @@ class WeatherflowApi:
             raise WeatherflowApiFailure("Received non-upgraded response")
         return resp.json()
 
-    def fetch_model(self, spot_id: str, model_id: str) -> dict:
+    def fetch_model(self, spot_id: str, model_id: WeatherFlowModel) -> dict:
         resp = requests.get(
             'https://api.weatherflow.com/wxengine/rest/model/getModelDataBySpot',
             params={
                 'units_wind': [self.units_wind],
                 'units_temp': [self.units_temp],
                 'units_distance': [self.units_distance],
-                'model_id': [model_id],
+                'model_id': [model_id.value],
                 'spot_id': [spot_id],
                 'wf_token': [self.wf_token or ""],
                 '_': [ms_epoch()]  # Cachebreak ?

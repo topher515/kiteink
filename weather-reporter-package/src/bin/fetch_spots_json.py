@@ -4,16 +4,18 @@ import concurrent.futures
 import json
 import logging
 import os
+import re
 import sys
 from base64 import b64encode
 
 from weather_reporter.log import setup_rotating_file_log
-from weather_reporter.weatherflow_api import (MODEL_ID_BY_NAME,
+from weather_reporter.weatherflow_api import (WeatherFlowModel,
                                               WeatherflowApiWithWfTokenCache)
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 LOG_FILE_PATH = os.environ.get("KITE_LOG_FILE_PATH")
+WF_MODEL_NAME = re.sub(r'\W', '_', os.environ.get("WF_MODEL_NAME", "Quicklook").lower())
 
 
 def main():
@@ -30,7 +32,11 @@ def main():
     if LOG_FILE_PATH:
         setup_rotating_file_log(LOG_FILE_PATH)
 
-    model_id = MODEL_ID_BY_NAME['Quicklook']
+    try:
+        model_id: WeatherFlowModel = getattr(WeatherFlowModel, WF_MODEL_NAME)
+    except AttributeError:
+        logging.error(f"Unknown model name: {WF_MODEL_NAME}")
+        sys.exit(1)
 
     username = os.environ.get("WF_USERNAME", None)
     pw = os.environ.get("WF_PASSWORD", None)
@@ -38,7 +44,7 @@ def main():
         username=username, password=pw, expect_upgraded=bool(username and pw))
 
     def fetch_spot_data(spot_id: str):
-        logging.info(f"Fetching spot {spot_id}")
+        logging.info(f"Fetching spot {spot_id} (with model {model_id})")
         graph_summary_data = wfapi.fetch_graph_summary(spot_id)
         model_data = wfapi.fetch_model(spot_id, model_id)
 
@@ -53,7 +59,7 @@ def main():
             {
                 "graph_summary": graph_summary_data,
                 "models": {
-                    model_id: model_data
+                    model_id.value: model_data
                 },
                 "gauge_img": b64encode(gauge_img.read()).decode('utf8')
             }

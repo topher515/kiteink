@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import (Callable, Iterable, Optional, Sequence, Tuple, TypedDict,
                     Union, cast)
+import logging
 
 import dateutil.parser
 import pytz
@@ -232,6 +233,10 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
         d = draw_red if red else draw_blk
         d.text(coords, text, font=fnt, fill=BLACK_BIT, )
 
+    # def write_bar_chart(*args, **kwargs):
+    #     print("write_bar_chart", args, kwargs)
+    #     return _write_bar_chart(*args, **kwargs)
+
     def write_bar_chart(coords: Tuple[int, int], bars: Iterable[BarChartDatum], width: int = 2, red=False, pixels_per_unit=UNIT_SPEED_PIXEL_HEIGHT, x_axis_skip=2):
         d = draw_red if red else draw_blk
 
@@ -250,8 +255,8 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
             value = bar_datum["value"]
             bar_red = bar_datum.get("red", red)
             bar_d = draw_red if bar_red else draw_blk
-            bar_d.rectangle((x, y - 5, x + width, y - (5 + value*pixels_per_unit)),
-                            outline=BLACK_BIT, fill=BLACK_BIT if filled else WHITE_BIT, width=1)
+            rect = (x, y - 5, x + width, y - (5 + value*pixels_per_unit))
+            bar_d.rectangle(rect, outline=BLACK_BIT, fill=BLACK_BIT if filled else WHITE_BIT, width=1)
 
             if i % x_axis_skip == 0:
                 # Print every other hour
@@ -373,7 +378,9 @@ def paint_blk_and_red_imgs(spots_data: Sequence[dict]) -> Tuple[Image.Image, Ima
     spot_x = 150
     for spot_data in spots_data:
         graph_summary_data: dict = spot_data["graph_summary"]
-        model_data: dict = spot_data["models"]["-1"]
+        if len(spot_data["models"]) > 1:
+            logging.warning(f"Painter observed multiple models: {[x for x in spot_data['models'].keys()]} selecting one arbitrarily")
+        model_data = list(spot_data["models"].values())[0]
         gauge_img_data: Union[str, bytes] = spot_data["gauge_img"]
         paint_spot_col(spot_x, graph_summary_data, gauge_img_data, model_data)
         spot_x += 220
